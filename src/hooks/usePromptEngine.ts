@@ -1,0 +1,365 @@
+'use client';
+import { useState, useCallback, useMemo, useEffect } from 'react';
+import { SECTIONS, PLATFORMS, SCORE_CATS, CONFLICTS } from '@/data/sections';
+import { COLOR_PRESETS, PRESET_CATEGORIES } from '@/data/colorPresets';
+import type { PresetCategory } from '@/data/colorPresets';
+import type { Language, ColorGradingState } from '@/types';
+
+interface HistoryEntry {
+  id: string;
+  prompt: string;
+  selections: Record<string, string>;
+  subject: string;
+  platform: string;
+  score: number;
+  timestamp: number;
+  colorGrading?: ColorGradingState;
+  activePreset?: string | null;
+  colorRule60?: string | null;
+  colorRule30?: string | null;
+  colorRule10?: string | null;
+}
+
+const initialColorGrading: ColorGradingState = {
+  shadows: { hue: 0, sat: 0 },
+  midtones: { hue: 0, sat: 0 },
+  highlights: { hue: 0, sat: 0 },
+  temperature: 0,
+  tint: 0,
+  contrast: 0,
+  saturation: 0,
+  vibrance: 0,
+  fade: 0,
+  grain: 0,
+  bloom: 0,
+};
+
+function getHueColor(hue: number): string {
+  if (hue < 20 || hue >= 340) return 'warm red-tinted';
+  if (hue < 50) return 'golden amber-toned';
+  if (hue < 80) return 'warm yellow-tinted';
+  if (hue < 160) return 'green-tinted';
+  if (hue < 260) return 'cool blue-tinted';
+  if (hue < 295) return 'indigo-tinted';
+  return 'magenta-tinted';
+}
+
+function generateColorPrompt(state: ColorGradingState): string {
+  const parts: string[] = [];
+  if (state.shadows.sat > 0) {
+    const color = getHueColor(state.shadows.hue);
+    if (state.shadows.sat <= 15) parts.push(`subtly ${color} shadows`);
+    else if (state.shadows.sat <= 50) parts.push(`${color} shadows`);
+    else parts.push(`deeply ${color} shadows`);
+  }
+  if (state.midtones.sat > 0) {
+    const color = getHueColor(state.midtones.hue);
+    if (state.midtones.sat <= 15) parts.push(`subtly ${color} midtones`);
+    else if (state.midtones.sat <= 50) parts.push(`${color} midtones`);
+    else parts.push(`vividly ${color} midtones`);
+  }
+  if (state.highlights.sat > 0) {
+    const color = getHueColor(state.highlights.hue);
+    if (state.highlights.sat <= 15) parts.push(`softly ${color} highlights`);
+    else if (state.highlights.sat <= 50) parts.push(`${color} highlights`);
+    else parts.push(`intensely ${color} highlights`);
+  }
+  if (state.temperature > 0) {
+    if (state.temperature <= 40) parts.push("warm color temperature");
+    else if (state.temperature <= 75) parts.push("warm color temperature with golden undertones");
+    else parts.push("intensely warm golden hour color palette");
+  } else if (state.temperature < 0) {
+    const abs = Math.abs(state.temperature);
+    if (abs <= 40) parts.push("cool color temperature");
+    else if (abs <= 75) parts.push("cool color temperature with blue undertones");
+    else parts.push("frosty cool-toned color palette");
+  }
+  if (state.tint > 0) {
+    if (state.tint <= 50) parts.push("slight magenta tint shift");
+    else parts.push("stylized magenta-purple tinting");
+  } else if (state.tint < 0) {
+    const abs = Math.abs(state.tint);
+    if (abs <= 50) parts.push("slight green tint shift");
+    else parts.push("cinematic green-cyan color grading");
+  }
+  if (state.contrast > 0) {
+    if (state.contrast <= 50) parts.push("high contrast");
+    else parts.push("high contrast with deep crushed blacks");
+  } else if (state.contrast < 0) {
+    const abs = Math.abs(state.contrast);
+    if (abs <= 50) parts.push("low contrast");
+    else parts.push("low contrast, flat profile with soft details");
+  }
+  if (state.saturation > 0) {
+    if (state.saturation <= 50) parts.push("richly saturated colors");
+    else parts.push("highly saturated, vibrant color palette");
+  } else if (state.saturation < 0) {
+    if (state.saturation === -100) parts.push("monochrome, pure black and white");
+    else if (Math.abs(state.saturation) <= 50) parts.push("desaturated colors");
+    else parts.push("heavily desaturated muted palette");
+  }
+  if (state.vibrance > 0) {
+    if (state.vibrance <= 50) parts.push("vibrant selective color boost");
+    else parts.push("strikingly vivid color accents");
+  }
+  if (state.fade > 0) {
+    if (state.fade <= 50) parts.push("lifted blacks, vintage film fade");
+    else parts.push("heavy matte look, faded film aesthetics");
+  }
+  if (state.grain > 0) {
+    if (state.grain <= 35) parts.push("subtle analog film grain");
+    else if (state.grain <= 70) parts.push("cinematic film grain");
+    else parts.push("heavy coarse analog film grain");
+  }
+  if (state.bloom > 0) {
+    if (state.bloom <= 50) parts.push("soft diffused bloom");
+    else parts.push("dreamy diffused glow, halation bloom");
+  }
+  return parts.join(', ');
+}
+
+export function usePromptEngine() {
+  const [lang, setLang] = useState<Language>('ar');
+  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
+  const [activePlatform, setActivePlatform] = useState('kling3');
+  const [subject, setSubject] = useState('');
+  const [activeView, setActiveView] = useState<'main' | 'history' | 'colorlab'>('main');
+  const [history, setHistory] = useState<HistoryEntry[]>([]);
+  const [colorGrading, setColorGradingRaw] = useState<ColorGradingState>(initialColorGrading);
+  const [activePreset, setActivePreset] = useState<string | null>(null);
+  const [presetCategory, setPresetCategory] = useState<PresetCategory>('hollywood');
+  const [colorRule60, setColorRule60] = useState<string | null>(null);
+  const [colorRule30, setColorRule30] = useState<string | null>(null);
+  const [colorRule10, setColorRule10] = useState<string | null>(null);
+
+  // Wrap setColorGrading to clear active preset on manual edits
+  const setColorGrading: typeof setColorGradingRaw = useCallback((action) => {
+    setActivePreset(null);
+    setColorGradingRaw(action);
+  }, []);
+
+  const setColorRule = useCallback((slot: 'colorRule60' | 'colorRule30' | 'colorRule10', colorName: string | null) => {
+    if (slot === 'colorRule60') setColorRule60(colorName);
+    else if (slot === 'colorRule30') setColorRule30(colorName);
+    else if (slot === 'colorRule10') setColorRule10(colorName);
+  }, []);
+
+  const resetColorRule = useCallback(() => {
+    setColorRule60(null);
+    setColorRule30(null);
+    setColorRule10(null);
+  }, []);
+
+  // Load history from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tura-history');
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        setTimeout(() => setHistory(parsed), 0);
+      }
+    } catch {}
+  }, []);
+
+  // Save history to localStorage
+  useEffect(() => {
+    try {
+      localStorage.setItem('tura-history', JSON.stringify(history));
+    } catch {}
+  }, [history]);
+
+  const toggleLang = useCallback(() => {
+    setLang(prev => {
+      const langs: Language[] = ['ar', 'en', 'fr', 'es', 'ko', 'zh'];
+      const idx = langs.indexOf(prev);
+      return langs[(idx + 1) % langs.length];
+    });
+  }, []);
+
+  const toggleOption = useCallback((cat: string, val: string) => {
+    setSelections(prev => {
+      const next = { ...prev };
+      if (next[cat] === val) { delete next[cat]; }
+      else { next[cat] = val; }
+      return next;
+    });
+  }, []);
+
+  const applySelections = useCallback((
+    sel: Record<string, string>,
+    grading?: ColorGradingState,
+    preset?: string | null,
+    c60?: string | null,
+    c30?: string | null,
+    c10?: string | null
+  ) => {
+    setSelections(sel);
+    if (grading) {
+      setColorGradingRaw(grading);
+    } else {
+      setColorGradingRaw(initialColorGrading);
+    }
+    setActivePreset(preset !== undefined ? preset : null);
+    setColorRule60(c60 || null);
+    setColorRule30(c30 || null);
+    setColorRule10(c10 || null);
+    setActiveView('main');
+  }, []);
+
+  const clearAll = useCallback(() => {
+    setSelections({});
+    setSubject('');
+    setColorGradingRaw(initialColorGrading);
+    setActivePreset(null);
+    setColorRule60(null);
+    setColorRule30(null);
+    setColorRule10(null);
+  }, []);
+
+  const resetColorGrading = useCallback(() => {
+    setColorGradingRaw(initialColorGrading);
+    setActivePreset(null);
+  }, []);
+
+  const applyColorPreset = useCallback((presetId: string) => {
+    const preset = COLOR_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    if (activePreset === presetId) {
+      // Toggle off: reset to default
+      setColorGradingRaw(initialColorGrading);
+      setActivePreset(null);
+    } else {
+      setColorGradingRaw(preset.values);
+      setActivePreset(presetId);
+    }
+  }, [activePreset]);
+
+  const selectionCount = Object.keys(selections).length;
+
+  const colorPrompt = useMemo(() => {
+    return generateColorPrompt(colorGrading);
+  }, [colorGrading]);
+
+  const colorRulePrompt = useMemo(() => {
+    const parts: string[] = [];
+    if (colorRule60) parts.push(`60% dominant [${colorRule60}]`);
+    if (colorRule30) parts.push(`30% secondary [${colorRule30}]`);
+    if (colorRule10) parts.push(`10% vivid accent [${colorRule10}]`);
+    if (parts.length === 0) return '';
+    return `strict 60-30-10 color palette: ${parts.join(', ')}`;
+  }, [colorRule60, colorRule30, colorRule10]);
+
+  const score = useMemo(() => {
+    const cats = SCORE_CATS.map(sc => {
+      const filled = sc.keys.some(k => selections[k]);
+      return { ...sc, filled };
+    });
+    const total = cats.reduce((sum, sc) => sum + (sc.filled ? sc.pts : 0), 0);
+    return { total, cats };
+  }, [selections]);
+
+  const prompt = useMemo(() => {
+    const parts: string[] = [];
+    if (subject.trim()) parts.push(subject.trim());
+    const order = [
+      'camera_body', 'lens_type', 'focal_length', 'aperture', 'depth_of_field',
+      'shot_size', 'subject_scale', 'advanced_framing', 'camera_movement', 'camera_motion_dynamics',
+      'dop_name', 'lighting_setup', 'env_lighting_texture', 'color_grade',
+      'technique',
+      'aspect_ratio',
+      'mod_lenses', 'mod_framing', 'mod_color', 'mod_camera'
+    ];
+    for (const key of order) {
+      if (!selections[key]) continue;
+      for (const sec of SECTIONS) {
+        for (const grp of sec.groups) {
+          if (grp.cat !== key) continue;
+          const item = grp.items.find(i => i.ar === selections[key]);
+          if (item) parts.push(item.prompt);
+        }
+      }
+    }
+    for (const [key, val] of Object.entries(selections)) {
+      if (order.includes(key)) continue;
+      for (const sec of SECTIONS) {
+        for (const grp of sec.groups) {
+          if (grp.cat !== key) continue;
+          const item = grp.items.find(i => i.ar === val);
+          if (item) parts.push(item.prompt);
+        }
+      }
+    }
+    let result = parts.join(', ').trim();
+    if (colorPrompt) {
+      if (result) {
+        result += ', ' + colorPrompt;
+      } else {
+        result = colorPrompt;
+      }
+    }
+    if (colorRulePrompt) {
+      if (result) {
+        result += ', ' + colorRulePrompt;
+      } else {
+        result = colorRulePrompt;
+      }
+    }
+    return result;
+  }, [selections, subject, colorPrompt, colorRulePrompt]);
+
+  const conflicts = useMemo(() => {
+    return CONFLICTS.filter(c =>
+      selections[c.a] === c.va && selections[c.b] === c.vb
+    );
+  }, [selections]);
+
+  const saveToHistory = useCallback(() => {
+    if (!prompt) return false;
+    const entry: HistoryEntry = {
+      id: Date.now().toString(36),
+      prompt, selections: { ...selections }, subject,
+      platform: activePlatform,
+      score: score.total,
+      timestamp: Date.now(),
+      colorGrading: { ...colorGrading },
+      activePreset,
+      colorRule60,
+      colorRule30,
+      colorRule10,
+    };
+    setHistory(prev => [entry, ...prev].slice(0, 50));
+    return true;
+  }, [prompt, selections, subject, activePlatform, score.total, colorGrading, activePreset, colorRule60, colorRule30, colorRule10]);
+
+  const deleteHistoryEntry = useCallback((id: string) => {
+    setHistory(prev => prev.filter(e => e.id !== id));
+  }, []);
+
+  const clearHistory = useCallback(() => {
+    setHistory([]);
+  }, []);
+
+  const currentSection = SECTIONS.find(s => s.key === activeSection) || SECTIONS[0];
+
+  return {
+    lang, toggleLang, setLang,
+    selections, toggleOption, applySelections, clearAll, selectionCount,
+    activeSection, setActiveSection, currentSection,
+    activeView, setActiveView,
+    activePlatform, setActivePlatform,
+    subject, setSubject,
+    score, prompt, conflicts,
+    sections: SECTIONS, platforms: PLATFORMS,
+    // Color Lab
+    colorGrading, setColorGrading, resetColorGrading, colorPrompt,
+    // Color Presets
+    activePreset, applyColorPreset,
+    presetCategory, setPresetCategory,
+    colorPresets: COLOR_PRESETS, presetCategories: PRESET_CATEGORIES,
+    // 60-30-10 Color Rule
+    colorRule60, colorRule30, colorRule10, setColorRule, resetColorRule, colorRulePrompt,
+    // History
+    history, saveToHistory, deleteHistoryEntry, clearHistory,
+  };
+}
