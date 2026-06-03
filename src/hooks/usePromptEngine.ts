@@ -8,7 +8,7 @@ import type { Language, ColorGradingState } from '@/types';
 interface HistoryEntry {
   id: string;
   prompt: string;
-  selections: Record<string, string>;
+  selections: Record<string, string | string[]>;
   subject: string;
   platform: string;
   score: number;
@@ -18,6 +18,7 @@ interface HistoryEntry {
   colorRule60?: string | null;
   colorRule30?: string | null;
   colorRule10?: string | null;
+  title?: string;
 }
 
 const initialColorGrading: ColorGradingState = {
@@ -120,7 +121,7 @@ function generateColorPrompt(state: ColorGradingState): string {
 
 export function usePromptEngine() {
   const [lang, setLang] = useState<Language>('ar');
-  const [selections, setSelections] = useState<Record<string, string>>({});
+  const [selections, setSelections] = useState<Record<string, string | string[]>>({});
   const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
   const [activePlatform, setActivePlatform] = useState('kling3');
   const [subject, setSubject] = useState('');
@@ -178,16 +179,42 @@ export function usePromptEngine() {
   }, []);
 
   const toggleOption = useCallback((cat: string, val: string) => {
+    const MULTI_SELECT_CATS = [
+      'technique',
+      'mod_lenses',
+      'mod_framing',
+      'mod_color',
+      'camera_motion_dynamics',
+      'lighting_setup'
+    ];
     setSelections(prev => {
       const next = { ...prev };
-      if (next[cat] === val) { delete next[cat]; }
-      else { next[cat] = val; }
+      const isMulti = MULTI_SELECT_CATS.includes(cat);
+      if (isMulti) {
+        const currentList = Array.isArray(next[cat]) ? (next[cat] as string[]) : next[cat] ? [next[cat] as string] : [];
+        if (currentList.includes(val)) {
+          const updated = currentList.filter(v => v !== val);
+          if (updated.length === 0) {
+            delete next[cat];
+          } else {
+            next[cat] = updated;
+          }
+        } else {
+          next[cat] = [...currentList, val];
+        }
+      } else {
+        if (next[cat] === val) {
+          delete next[cat];
+        } else {
+          next[cat] = val;
+        }
+      }
       return next;
     });
   }, []);
 
   const applySelections = useCallback((
-    sel: Record<string, string>,
+    sel: Record<string, string | string[]>,
     grading?: ColorGradingState,
     preset?: string | null,
     c60?: string | null,
@@ -252,7 +279,11 @@ export function usePromptEngine() {
 
   const score = useMemo(() => {
     const cats = SCORE_CATS.map(sc => {
-      const filled = sc.keys.some(k => selections[k]);
+      const filled = sc.keys.some(k => {
+        const val = selections[k];
+        if (Array.isArray(val)) return val.length > 0;
+        return !!val;
+      });
       return { ...sc, filled };
     });
     const total = cats.reduce((sum, sc) => sum + (sc.filled ? sc.pts : 0), 0);
@@ -265,28 +296,37 @@ export function usePromptEngine() {
     const order = [
       'camera_body', 'lens_type', 'focal_length', 'aperture', 'depth_of_field',
       'shot_size', 'subject_scale', 'advanced_framing', 'camera_movement', 'camera_motion_dynamics',
-      'dop_name', 'lighting_setup', 'env_lighting_texture', 'color_grade',
+      'lighting_setup', 'env_lighting_texture',
+      'composition_style',
       'technique',
       'aspect_ratio',
       'mod_lenses', 'mod_framing', 'mod_color', 'mod_camera'
     ];
     for (const key of order) {
-      if (!selections[key]) continue;
-      for (const sec of SECTIONS) {
-        for (const grp of sec.groups) {
-          if (grp.cat !== key) continue;
-          const item = grp.items.find(i => i.ar === selections[key]);
-          if (item) parts.push(item.prompt);
+      const val = selections[key];
+      if (!val) continue;
+      const values = Array.isArray(val) ? val : [val];
+      for (const singleVal of values) {
+        for (const sec of SECTIONS) {
+          for (const grp of sec.groups) {
+            if (grp.cat !== key) continue;
+            const item = grp.items.find(i => i.ar === singleVal);
+            if (item) parts.push(item.prompt);
+          }
         }
       }
     }
     for (const [key, val] of Object.entries(selections)) {
       if (order.includes(key)) continue;
-      for (const sec of SECTIONS) {
-        for (const grp of sec.groups) {
-          if (grp.cat !== key) continue;
-          const item = grp.items.find(i => i.ar === val);
-          if (item) parts.push(item.prompt);
+      if (!val) continue;
+      const values = Array.isArray(val) ? val : [val];
+      for (const singleVal of values) {
+        for (const sec of SECTIONS) {
+          for (const grp of sec.groups) {
+            if (grp.cat !== key) continue;
+            const item = grp.items.find(i => i.ar === singleVal);
+            if (item) parts.push(item.prompt);
+          }
         }
       }
     }
@@ -309,12 +349,16 @@ export function usePromptEngine() {
   }, [selections, subject, colorPrompt, colorRulePrompt]);
 
   const conflicts = useMemo(() => {
-    return CONFLICTS.filter(c =>
-      selections[c.a] === c.va && selections[c.b] === c.vb
-    );
+    return CONFLICTS.filter(c => {
+      const valA = selections[c.a];
+      const valB = selections[c.b];
+      const hasA = Array.isArray(valA) ? valA.includes(c.va) : valA === c.va;
+      const hasB = Array.isArray(valB) ? valB.includes(c.vb) : valB === c.vb;
+      return hasA && hasB;
+    });
   }, [selections]);
 
-  const saveToHistory = useCallback(() => {
+  const saveToHistory = useCallback((title: string) => {
     if (!prompt) return false;
     const entry: HistoryEntry = {
       id: Date.now().toString(36),
@@ -327,6 +371,7 @@ export function usePromptEngine() {
       colorRule60,
       colorRule30,
       colorRule10,
+      title: title || undefined
     };
     setHistory(prev => [entry, ...prev].slice(0, 50));
     return true;

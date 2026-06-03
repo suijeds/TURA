@@ -7,20 +7,20 @@
 
 /* ── CSS VARIABLES ── */
 :root {
-  --bg: #0a0e14;
-  --bg2: #0f1520;
-  --bg3: #151d2e;
-  --bg4: #1a2540;
-  --surface: #141c2a;
-  --surface2: #1c2840;
-  --surface3: #243050;
-  --border: #1e2d48;
-  --border2: #2a3d60;
-  --border3: #354a70;
-  --text: #e0e8f5;
-  --text2: #8fa8cc;
-  --text3: #5a7090;
-  --text4: #3a506a;
+  --bg: #09090b;
+  --bg2: #121215;
+  --bg3: #18181b;
+  --bg4: #27272a;
+  --surface: #09090b;
+  --surface2: #18181b;
+  --surface3: #27272a;
+  --border: #222226;
+  --border2: #3f3f46;
+  --border3: #52525b;
+  --text: #f4f4f5;
+  --text2: #a1a1aa;
+  --text3: #71717a;
+  --text4: #52525b;
   --accent: #d4a020;
   --accent2: #f0c040;
   --accent3: #b8860b;
@@ -326,10 +326,10 @@ a { color: var(--accent); text-decoration: none; }
 }
 
 .opt-card {
-  padding: 14px 16px;
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  padding: 16px;
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
   cursor: pointer;
   transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
   position: relative;
@@ -338,6 +338,7 @@ a { color: var(--accent); text-decoration: none; }
   flex-direction: column;
   align-items: flex-start;
   height: 100%;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .opt-card::before {
@@ -353,18 +354,18 @@ a { color: var(--accent); text-decoration: none; }
 }
 
 .opt-card:hover {
-  border-color: var(--border2);
-  background: var(--surface2);
+  border-color: rgba(255, 255, 255, 0.2) !important;
+  background: #111115 !important;
   transform: translateY(-2px);
-  box-shadow: var(--shadow-sm);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(255, 255, 255, 0.06) !important;
 }
 
 .opt-card:hover::before { opacity: 0.5; }
 
 .opt-card.selected {
-  border-color: var(--accent);
-  background: var(--accent-glow);
-  box-shadow: 0 0 0 1px var(--accent3), var(--shadow-glow);
+  border-color: var(--accent) !important;
+  background: #09090b !important;
+  box-shadow: 0 0 15px var(--accent-glow), 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .opt-card.selected::before { opacity: 1; }
@@ -372,11 +373,11 @@ a { color: var(--accent); text-decoration: none; }
 .opt-card.selected::after {
   content: '✓';
   position: absolute;
-  top: 8px;
-  inset-inline-end: 10px;
-  font-size: 0.75rem;
+  top: 10px;
+  inset-inline-end: 12px;
+  font-size: 0.8rem;
   color: var(--accent);
-  font-weight: 700;
+  font-weight: 800;
   width: 20px;
   height: 20px;
   display: flex;
@@ -387,31 +388,31 @@ a { color: var(--accent); text-decoration: none; }
 }
 
 .opt-name-ar {
-  font-size: 0.88rem;
-  font-weight: 600;
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #ffffff !important;
   display: block;
-  margin-bottom: 2px;
+  margin-bottom: 3px;
 }
 
 .opt-name-en {
-  font-size: 0.7rem;
-  color: var(--text3);
+  font-size: 0.72rem;
+  color: #a1a1aa !important;
   display: block;
-  margin-bottom: 4px;
+  margin-bottom: 6px;
 }
 
 .opt-desc {
-  font-size: 0.72rem;
-  color: var(--text3);
-  line-height: 1.45;
-  margin-top: 4px;
+  font-size: 0.74rem;
+  color: #71717a !important;
+  line-height: 1.5;
+  margin-top: 6px;
   border-top: 1px solid rgba(255, 255, 255, 0.05);
-  padding-top: 6px;
-  margin-bottom: 8px;
+  padding-top: 8px;
+  margin-bottom: 4px;
   flex-grow: 1;
   text-align: start;
   
-  /* Multiline truncate (3 lines) */
   display: -webkit-box;
   -webkit-line-clamp: 3;
   -webkit-box-orient: vertical;
@@ -1589,8 +1590,8 @@ body[dir="ltr"] .plan-badge {
   .main-layout { grid-template-columns: 1fr; }
   .sidebar { display: none; }
   .prompt-panel { display: none; }
-  .sidebar.mobile-show { display: block; position: fixed; inset: 0; top: var(--topbar-h); z-index: 90; }
-  .prompt-panel.mobile-show { display: flex; position: fixed; inset: 0; top: var(--topbar-h); z-index: 90; }
+  .sidebar.mobile-show { display: block; position: fixed; inset: 0; top: var(--topbar-h); bottom: var(--mob-nav); z-index: 90; }
+  .prompt-panel.mobile-show { display: flex; position: fixed; inset: 0; top: var(--topbar-h); bottom: var(--mob-nav); z-index: 90; }
   .center-panel { padding: 16px; padding-bottom: calc(var(--mob-nav) + 16px); }
   .mobile-nav { display: flex; }
   .topbar .desktop-only { display: none; }
@@ -1725,15 +1726,16 @@ body[dir="ltr"] .plan-badge {
 }
 
 .color-wheel-wrapper {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
   padding: 16px;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 12px;
-  transition: border-color var(--transition);
+  transition: all var(--transition);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .color-wheel-wrapper:hover {
@@ -1800,10 +1802,11 @@ body[dir="ltr"] .plan-badge {
   display: flex;
   flex-direction: column;
   gap: 6px;
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
   padding: 12px 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .color-slider-label-row {
@@ -1960,13 +1963,14 @@ body[dir="ltr"] .plan-badge {
 /* ═══════════════════════════════════════ */
 
 .color-presets-section {
-  background: var(--bg2);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
   padding: 20px;
   display: flex;
   flex-direction: column;
   gap: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .color-presets-header {
@@ -2088,12 +2092,13 @@ body[dir="ltr"] .plan-badge {
 /* ── Preset Card ── */
 .preset-card {
   position: relative;
-  background: var(--bg3);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+  background: #09090b !important;
+  border: 1px solid rgba(255, 255, 255, 0.08) !important;
+  border-radius: 16px !important;
   overflow: hidden;
   cursor: pointer;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.45), inset 0 1px 0 rgba(255, 255, 255, 0.04) !important;
 }
 
 .preset-card:hover {
@@ -2773,6 +2778,238 @@ body[dir="ltr"] .plan-badge {
 .premium-close-btn:hover {
   background: rgba(255, 255, 255, 0.05);
   color: var(--text2);
+}
+
+/* ── LIGHT THEME VARIABLES OVERRIDES ── */
+body.light {
+  --bg: #f4f6fa;
+  --bg2: #ffffff;
+  --bg3: #edf0f5;
+  --bg4: #e2e7f0;
+  --surface: #ffffff;
+  --surface2: #f0f3f8;
+  --surface3: #e6ebf3;
+  --border: #d3dbe8;
+  --border2: #b9c5d9;
+  --border3: #9fb0c9;
+  --text: #1a2333;
+  --text2: #4a5a73;
+  --text3: #6c7e99;
+  --text4: #98a9c2;
+  --accent: #b07c00;
+  --accent2: #d4a020;
+  --accent3: #966900;
+  --accent-glow: rgba(176, 124, 0, 0.1);
+  --accent-glow2: rgba(176, 124, 0, 0.05);
+  --shadow: 0 8px 32px rgba(26, 35, 51, 0.08);
+  --shadow-sm: 0 2px 12px rgba(26, 35, 51, 0.04);
+  --shadow-glow: 0 0 20px rgba(176, 124, 0, 0.05);
+}
+
+/* Override styling elements for light mode readability */
+body.light .topbar {
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 1px 10px rgba(0, 0, 0, 0.05);
+}
+body.light .sidebar {
+  box-shadow: 1px 0 10px rgba(0, 0, 0, 0.03);
+}
+body.light .prompt-panel {
+  box-shadow: -1px 0 10px rgba(0, 0, 0, 0.03);
+}
+body.light .opt-btn {
+  background: var(--bg2);
+}
+body.light .opt-btn:hover {
+  background: var(--bg3);
+}
+body.light .opt-btn.active {
+  background: var(--accent-glow);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+body.light .color-presets-section {
+  background: var(--bg2);
+}
+
+/* Light Theme Color Lab and Option Card overrides to fix contrast & readability */
+body.light .color-wheel-wrapper,
+body.light .color-slider-item,
+body.light .opt-card {
+  background: var(--bg2) !important;
+  border: 1px solid var(--border) !important;
+  box-shadow: 0 4px 12px rgba(26, 35, 51, 0.03), inset 0 1px 0 rgba(255, 255, 255, 0.6) !important;
+}
+
+body.light .opt-card:hover {
+  background: var(--bg3) !important;
+  border-color: var(--border2) !important;
+  box-shadow: 0 8px 24px rgba(26, 35, 51, 0.06), inset 0 1px 0 rgba(255, 255, 255, 0.8) !important;
+}
+
+body.light .opt-card.selected {
+  background: var(--bg2) !important;
+  border-color: var(--accent) !important;
+  box-shadow: 0 0 15px var(--accent-glow), 0 4px 12px rgba(26, 35, 51, 0.03) !important;
+}
+
+body.light .opt-name-ar {
+  color: var(--text) !important;
+}
+
+body.light .opt-name-en {
+  color: var(--text2) !important;
+}
+
+body.light .opt-desc {
+  color: var(--text3) !important;
+  border-top: 1px solid var(--border) !important;
+}
+
+body.light .color-wheel-readout {
+  background: var(--bg3) !important;
+  border-color: var(--border) !important;
+  color: var(--text2) !important;
+}
+
+
+/* ── SETTINGS MENU & DROPDOWN ── */
+.settings-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.settings-dropdown-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  left: auto;
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  width: 260px;
+  padding: 8px;
+  box-shadow: var(--shadow);
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  opacity: 0;
+  transform: translateY(-8px);
+  pointer-events: none;
+  transition: all var(--transition);
+  z-index: 200;
+}
+
+.settings-dropdown-menu.open {
+  opacity: 1;
+  transform: translateY(0);
+  pointer-events: auto;
+}
+
+/* Layout for RTL vs LTR dropdown positioning */
+body:not(.lang-en) .settings-dropdown-menu {
+  left: 0;
+  right: auto;
+}
+
+.settings-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-radius: calc(var(--radius) - 2px);
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all var(--transition);
+  cursor: pointer;
+}
+
+.settings-menu-item:hover {
+  background: var(--bg3);
+  color: var(--text1);
+}
+
+.settings-menu-label-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.settings-menu-icon {
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+}
+
+/* Language Selection Area inside settings */
+.settings-lang-sub {
+  border-top: 1px solid var(--border);
+  margin-top: 4px;
+  padding-top: 6px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.settings-lang-title {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text3);
+  padding: 4px 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.settings-lang-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 4px;
+  padding: 0 4px;
+}
+
+.settings-lang-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 6px;
+  border-radius: 4px;
+  border: 1px solid transparent;
+  background: var(--bg3);
+  font-size: 0.74rem;
+  font-weight: 600;
+  color: var(--text3);
+  cursor: pointer;
+  transition: all var(--transition);
+}
+
+.settings-lang-btn:hover {
+  background: var(--bg4);
+  color: var(--text2);
+}
+
+.settings-lang-btn.active {
+  border-color: var(--accent);
+  background: var(--accent-glow);
+  color: var(--accent);
+}
+
+/* ── LIGHT THEME TOOLTIP STYLING OVERRIDES ── */
+body.light [data-tooltip]::after {
+  background: linear-gradient(145deg, rgba(255, 255, 255, 0.98) 0%, rgba(245, 247, 250, 0.99) 100%) !important;
+  color: #1a2333 !important;
+  border-color: rgba(176, 124, 0, 0.25) !important;
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.08), 0 4px 16px rgba(0, 0, 0, 0.04), 0 0 0 1px rgba(0, 0, 0, 0.05) !important;
+}
+
+body.light [data-tooltip]::before {
+  border-top-color: rgba(176, 124, 0, 0.3) !important;
+}
+
+body.light [data-tooltip-pos="bottom"]::before {
+  border-bottom-color: rgba(176, 124, 0, 0.3) !important;
 }
 
 

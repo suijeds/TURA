@@ -345,6 +345,14 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string | Record<stri
     ko: '기록',
     zh: '历史'
   },
+  projects: {
+    ar: 'المشاريع',
+    en: 'Projects',
+    fr: 'Projets',
+    es: 'Proyectos',
+    ko: '프로젝트',
+    zh: '项目'
+  },
   options: {
     ar: 'الخيارات',
     en: 'Options',
@@ -803,6 +811,17 @@ export const SECTION_TRANSLATIONS: Record<string, { name: Record<string, string>
       es: 'Aplica perfiles de gradación de color para armonizar la paleta.',
       ko: '영화적인 톤앤매너를 일치시키기 위해 정교한 컬러 그레이딩 프로필을 적용합니다.',
       zh: '应用高级色彩调校方案，使整幅画面的色彩搭配更加和谐统一。'
+    }
+  },
+  composition: {
+    name: { ar: 'التكوين والتأطير', en: 'Composition', fr: 'Composition', es: 'Composición', ko: '구도 및 تأطير', zh: '构图与取景' },
+    tooltip: {
+      ar: 'يحدد القواعد الهندسية وتوزيع العناصر وزوايا الرؤية داخل كادر الكاميرا.',
+      en: 'Determines geometric rules, element placement, and viewing angles within the camera frame.',
+      fr: 'Détermine les règles géométriques et le cadrage.',
+      es: 'Determina las reglas geométricas y el encuadre.',
+      ko: '카메라 프레임 내의 기하학적 규칙과 요소 배치, 화각을 결정합니다.',
+      zh: '确定相机画幅内的几何规则、元素布局与视角。'
     }
   },
   lighting: {

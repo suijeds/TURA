@@ -1,256 +1,344 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 
 export default function LandingPage() {
   const [lang, setLang] = useState<'ar' | 'en'>('ar');
-  const [yearly, setYearly] = useState(false);
-  const [modal, setModal] = useState<'none' | 'terms' | 'privacy'>('none');
-
+  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  
   const l = lang;
   const isAr = l === 'ar';
 
   const toggleLang = () => setLang(p => p === 'ar' ? 'en' : 'ar');
 
+  const handleMouseMove = (e: React.MouseEvent) => {
+    const x = (e.clientX - window.innerWidth / 2) / (window.innerWidth / 2);
+    const y = (e.clientY - window.innerHeight / 2) / (window.innerHeight / 2);
+    setMousePos({ x, y });
+  };
+
+  // Reset offset if mouse leaves window
+  const handleMouseLeave = () => {
+    setMousePos({ x: 0, y: 0 });
+  };
+
   return (
-    <div className="landing-wrap" dir={isAr ? 'rtl' : 'ltr'} style={{ direction: isAr ? 'rtl' : 'ltr', fontFamily: isAr ? 'var(--font-ar)' : 'var(--font-en)' }}>
+    <div 
+      className="dark-landing-wrapper" 
+      dir={isAr ? 'rtl' : 'ltr'}
+      onMouseMove={handleMouseMove}
+      onMouseLeave={handleMouseLeave}
+    >
+      {/* 3D Background Decorative Spheres with mouse-parallax transform offset */}
+      <div 
+        className="bg-sphere sphere-top-right float-animation-slow" 
+        style={{
+          transform: `translate3d(${mousePos.x * -35}px, ${mousePos.y * -35}px, 0)`
+        }}
+      ></div>
+      <div 
+        className="bg-sphere sphere-middle-right float-animation-medium"
+        style={{
+          transform: `translate3d(${mousePos.x * 20}px, ${mousePos.y * 20}px, 0)`
+        }}
+      ></div>
+      <div 
+        className="bg-sphere sphere-bottom-left float-animation-fast"
+        style={{
+          transform: `translate3d(${mousePos.x * -45}px, ${mousePos.y * -45}px, 0)`
+        }}
+      ></div>
       
-      {/* ══════ LANDING NAV ══════ */}
-      <nav className="landing-nav">
-        <div className="logo" style={{ margin: 0 }}>TURA <span className="logo-version">v14</span></div>
-        
-        <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-          <button className="ftab" onClick={toggleLang} style={{ padding: '4px 12px', fontSize: '0.75rem' }}>
-            🌐 {isAr ? 'EN' : 'عربي'}
-          </button>
-          <Link href="/engine" className="btn-glow" style={{ padding: '8px 20px', fontSize: '0.85rem' }}>
-            {isAr ? 'البناء ✦' : 'Engine ✦'}
-          </Link>
+      {/* Glowing atmospheric lights */}
+      <div className="glow-orb glow-orange"></div>
+      <div className="glow-orb glow-blue"></div>
+
+      {/* ── HEADER NAVBAR ── */}
+      <nav className="minimal-nav">
+        <div className="nav-logo">
+          <span className="logo-dot"></span>
+          TURA v14
+        </div>
+        <div className="nav-links">
+          <span className="nav-link" onClick={() => window.location.href = '/engine'}>
+            {isAr ? 'المحرك' : 'Engine'}
+          </span>
+          <span className="nav-link" onClick={toggleLang}>
+            {isAr ? 'English' : 'العربية'}
+          </span>
         </div>
       </nav>
 
-      {/* ══════ HERO SECTION ══════ */}
-      <header className="landing-hero">
-        <div className="hero-badge">
-          ✨ {isAr ? 'الجيل القادم من الهندسة البصرية' : 'NEXT-GEN CINEMATIC PROMPT ENGINEERING'}
-        </div>
-        
-        <h1 className="hero-title">
-          {isAr ? 'صياغة ' : 'Craft '}
-          <span className="hero-title-highlight">{isAr ? 'الرؤية السينمائية' : 'Cinematic Vision'}</span>
-          {isAr ? ' بالذكاء الاصطناعي' : ' with AI'}
+      {/* ── HERO CORE CONTENT ── */}
+      <main className="hero-content">
+        <h1 className="hero-title-bold">
+          {isAr ? 'تكوين وبناء سينمائي' : 'Minimalist'}
+          <br />
+          <span className="text-glow">{isAr ? 'بأبسط الأساليب' : 'Web Design'}</span>
         </h1>
-
-        <p className="hero-subtitle">
+        <p className="hero-subtitle-light">
           {isAr 
-            ? 'المحرك البصري الأول عالمياً المخصص للمخرجين، مديري التصوير، وصناع الأفلام. حوّل أفكارك إلى موجهات دقيقة لمنصات Midjourney v7 و Sora v2 مع اكتشاف فوري للتعارضات الفنية وتقييم فوري للوزن البصري.'
-            : 'The premium visual engine designed for directors, cinematographers, and filmmakers. Transform ideas into precise prompts for Midjourney v7 & Sora v2 with live art conflict detection and cinematic weight scoring.'}
+            ? 'نظام هندسة بصري متطور، حديث، وسهل. صمم موجهات سينمائية فائقة الواقعية.'
+            : 'Clean. Modern. Effective. Craft cinematic prompts and build visual masterworks.'}
         </p>
 
-        <div className="hero-cta-wrap">
-          <Link href="/engine" className="btn-glow" style={{ padding: '18px 40px', fontSize: '1.1rem' }}>
-            {isAr ? 'ابدأ البناء مجاناً' : 'Start Building Free'} ✦
+        <div className="hero-button-group">
+          <Link href="/engine" className="btn-get-started">
+            {isAr ? 'ابدأ الآن' : 'Get Started'}
           </Link>
-          <a href="#pricing" className="btn-outline">
-            {isAr ? 'عرض الخطط' : 'View Plans'}
-          </a>
+          <Link href="/engine?view=colorlab" className="btn-learn-more">
+            {isAr ? 'معمل الألوان' : 'Color Lab'}
+          </Link>
         </div>
-      </header>
+      </main>
 
-      {/* ══════ FEATURES SECTION ══════ */}
-      <section className="landing-section">
-        <div className="section-tag">{isAr ? 'قدرات المحرك' : 'ENGINE CAPABILITIES'}</div>
-        <h2 className="section-head">{isAr ? 'مصمم للتفوق البصري المطلق' : 'Engineered for Absolute Visual Supremacy'}</h2>
+      {/* ── STYLING (Embedded CSS for exact visual matching) ── */}
+      <style jsx global>{`
+        /* Import Outfit or modern font if desired */
+        @import url('https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&family=Cairo:wght@300;400;700&display=swap');
 
-        <div className="features-grid">
-          <div className="feat-card">
-            <span className="feat-icon">🧠</span>
-            <h3 className="feat-title">{isAr ? 'اكتشاف التعارضات الذكي' : 'Live Conflict Detection'}</h3>
-            <p className="feat-desc">
-              {isAr 
-                ? 'يحلل المحرك خياراتك الفنية فورياً ليحذرك من أي تضارب بين نوع العدسة، حركة الكاميرا، أو الإضاءة لضمان واقعية المشهد.'
-                : 'Analyzes your artistic choices instantly to prevent logic clashes between lens formats, camera weights, and physical lighting.'}
-            </p>
-          </div>
+        :root {
+          --font-landing: 'Outfit', 'Cairo', sans-serif;
+        }
 
-          <div className="feat-card">
-            <span className="feat-icon">📊</span>
-            <h3 className="feat-title">{isAr ? 'تقييم الوزن السينمائي' : 'Cinematic Weight Score'}</h3>
-            <p className="feat-desc">
-              {isAr 
-                ? 'نظام نقاط متطور يقيّم اكتمال الموجه من 0 إلى 100 بناءً على المعايير الخمسة: التقنية، الأسلوب، اللون، المزاج، والتأطير.'
-                : 'Advanced scoring engine evaluates prompt maturity from 0 to 100 based on core pillars: Tech, Style, Color, Mood, and Framing.'}
-            </p>
-          </div>
+        .dark-landing-wrapper {
+          background-color: #121214;
+          color: #ffffff;
+          min-height: 100vh;
+          position: relative;
+          overflow: hidden;
+          font-family: var(--font-landing);
+          display: flex;
+          flex-direction: column;
+          justify-content: space-between;
+          padding: 0 10%;
+          box-sizing: border-box;
+        }
 
-          <div className="feat-card">
-            <span className="feat-icon">📜</span>
-            <h3 className="feat-title">{isAr ? 'سجل وحفظ الموجهات' : 'Prompt History & Save'}</h3>
-            <p className="feat-desc">
-              {isAr 
-                ? 'احتفظ بأفضل الموجهات التي صممتها في السجل الخاص بك، واسترجعها بضغطة زر واحدة لمتابعة العمل أو التعديل الفوري.'
-                : 'Keep your best prompt creations in your local history, and apply or reuse them instantly with a single click.'}
-            </p>
-          </div>
+        /* 3D Skeuomorphic/Neumorphic Spheres */
+        .bg-sphere {
+          position: absolute;
+          border-radius: 50%;
+          background: radial-gradient(circle at 35% 35%, #555860 0%, #1e2025 60%, #0d0e10 100%);
+          box-shadow: 
+            -10px -10px 30px rgba(255, 255, 255, 0.05),
+            15px 15px 40px rgba(0, 0, 0, 0.7),
+            inset 2px 2px 5px rgba(255, 255, 255, 0.1),
+            inset -5px -5px 15px rgba(0, 0, 0, 0.8);
+          z-index: 1;
+          transition: transform 0.25s cubic-bezier(0.1, 0.8, 0.25, 1);
+          pointer-events: none; /* Let pointer events bubble to container for parallax */
+        }
 
-          <div className="feat-card">
-            <span className="feat-icon">🌐</span>
-            <h3 className="feat-title">{isAr ? 'تصدير متعدد المنصات' : 'Multi-Platform Syntax'}</h3>
-            <p className="feat-desc">
-              {isAr 
-                ? 'توليد تلقائي للصيغ والأوامر المخصصة لمنصات توليد الصور والفيديو الرائدة مثل Midjourney v7, DALL-E 3, Sora, و Flux.'
-                : 'Native auto-formatting and parameter syntax output tailored for Midjourney v7, DALL-E 3, Sora, and Flux generation models.'}
-            </p>
-          </div>
-        </div>
-      </section>
+        .sphere-top-right {
+          width: 180px;
+          height: 180px;
+          top: 15%;
+          right: 12%;
+        }
 
-      {/* ══════ PRICING SECTION ══════ */}
-      <section className="landing-section" id="pricing">
-        <div className="section-tag">{isAr ? 'الاستثمار البصري' : 'PREMIUM INVESTMENT'}</div>
-        <h2 className="section-head">{isAr ? 'خطط مرنة تناسب طموحك' : 'Flexible Plans for Every Scale'}</h2>
+        .sphere-middle-right {
+          width: 45px;
+          height: 45px;
+          top: 48%;
+          right: 25%;
+          opacity: 0.8;
+          background: radial-gradient(circle at 35% 35%, #444750 0%, #17181c 65%, #08090a 100%);
+        }
 
-        {/* Toggle */}
-        <div className="pricing-toggle">
-          <button className={`pt-btn ${!yearly ? 'active' : ''}`} onClick={() => setYearly(false)}>
-            {isAr ? 'شهري' : 'Monthly'}
-          </button>
-          <button className={`pt-btn ${yearly ? 'active' : ''}`} onClick={() => setYearly(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <span>{isAr ? 'سنوي' : 'Yearly'}</span>
-            <span className="discount-badge">{isAr ? 'وفر 20%' : 'SAVE 20%'}</span>
-          </button>
-        </div>
+        .sphere-bottom-left {
+          width: 140px;
+          height: 140px;
+          bottom: 8%;
+          left: 10%;
+        }
 
-        {/* Grid */}
-        <div className="pricing-grid">
-          
-          {/* Plan 1: Free */}
-          <div className="plan-card">
-            <div>
-              <h3 className="plan-name">{isAr ? 'الأساسية' : 'Basic'}</h3>
-              <div className="plan-price-wrap">
-                <span className="plan-price">$0</span>
-                <span className="plan-period">{isAr ? '/ للأبد' : '/ forever'}</span>
-              </div>
-              <ul className="plan-list">
-                <li className="plan-item">{isAr ? 'وصول قياسي لكافة الأقسام الـ 10' : 'Access to all 10 engine sections'}</li>
-                <li className="plan-item">{isAr ? 'حفظ السجل محلياً في المتصفح' : 'Local browser history storage'}</li>
-                <li className="plan-item">{isAr ? 'تصدير النصوص الفوري' : 'Instant plain text prompt export'}</li>
-                <li className="plan-item">{isAr ? 'اكتشاف التعارضات الأساسي' : 'Basic live logic checks'}</li>
-              </ul>
-            </div>
-            <Link href="/engine" className="plan-btn secondary" style={{ display: 'block' }}>
-              {isAr ? 'ابدأ مجاناً' : 'Get Started'}
-            </Link>
-          </div>
+        /* Ambient Glows */
+        .glow-orb {
+          position: absolute;
+          border-radius: 50%;
+          filter: blur(140px);
+          opacity: 0.15;
+          z-index: 0;
+          pointer-events: none;
+        }
+        .glow-orange {
+          width: 400px;
+          height: 400px;
+          background: #ff5722;
+          bottom: -10%;
+          right: -5%;
+        }
+        .glow-blue {
+          width: 350px;
+          height: 350px;
+          background: #00bcd4;
+          top: -5%;
+          left: -5%;
+        }
 
-          {/* Plan 2: Pro */}
-          <div className="plan-card pro">
-            <div className="plan-badge">{isAr ? 'الأكثر طلباً' : 'POPULAR'}</div>
-            <div>
-              <h3 className="plan-name" style={{ color: 'var(--accent)' }}>{isAr ? 'المخرجين (Pro)' : 'Director Pro'}</h3>
-              <div className="plan-price-wrap">
-                <span className="plan-price">${yearly ? '10' : '12'}</span>
-                <span className="plan-period">{isAr ? '/ شهر' : '/ month'}</span>
-              </div>
-              <ul className="plan-list">
-                <li className="plan-item" style={{ color: 'var(--text)' }}>{isAr ? 'كافة ميزات الخطة الأساسية' : 'All Basic features included'}</li>
-                <li className="plan-item" style={{ color: 'var(--text)' }}>{isAr ? 'حفظ غير محدود وسجل ممتد' : 'Unlock unlimited local storage & history'}</li>
-                <li className="plan-item" style={{ color: 'var(--text)' }}>{isAr ? 'أولوية التحديثات للنماذج الجديدة' : 'Priority updates for new AI models'}</li>
-                <li className="plan-item" style={{ color: 'var(--text)' }}>{isAr ? 'شارة المخرجين الذهبية الحصرية' : 'Exclusive golden Director badge'}</li>
-                <li className="plan-item" style={{ color: 'var(--text)' }}>{isAr ? 'تصدير وتخزين غير محدود في السحابة' : 'Unlimited cloud save & exports'}</li>
-              </ul>
-            </div>
-            <Link href="/engine" className="plan-btn primary" style={{ display: 'block' }}>
-              {isAr ? 'تفعيل الخطة الاحترافية' : 'Upgrade to Pro'}
-            </Link>
-          </div>
+        /* Continuous Float Animations (Slightly randomized parameters) */
+        @keyframes floatSlow {
+          0% { top: 15%; right: 12%; }
+          50% { top: 16.5%; right: 11%; }
+          100% { top: 15%; right: 12%; }
+        }
+        @keyframes floatMedium {
+          0% { top: 48%; right: 25%; }
+          50% { top: 46%; right: 26.5%; }
+          100% { top: 48%; right: 25%; }
+        }
+        @keyframes floatFast {
+          0% { bottom: 8%; left: 10%; }
+          50% { bottom: 9.5%; left: 9%; }
+          100% { bottom: 8%; left: 10%; }
+        }
 
-          {/* Plan 3: Studio */}
-          <div className="plan-card">
-            <div>
-              <h3 className="plan-name">{isAr ? 'الاستوديوهات' : 'Studio Teams'}</h3>
-              <div className="plan-price-wrap">
-                <span className="plan-price">${yearly ? '32' : '39'}</span>
-                <span className="plan-period">{isAr ? '/ شهر' : '/ month'}</span>
-              </div>
-              <ul className="plan-list">
-                <li className="plan-item">{isAr ? 'حسابات متعددة لفرق العمل (حتى 5)' : 'Multi-seat access for teams (up to 5)'}</li>
-                <li className="plan-item">{isAr ? 'تكامل مخصص مع API الداخلي' : 'Custom pipeline API integration'}</li>
-                <li className="plan-item">{isAr ? 'مشاركة الموجهات والمساحات المشتركة' : 'Shared team workspace & prompts'}</li>
-                <li className="plan-item">{isAr ? 'دعم فني مخصص على مدار الساعة' : '24/7 dedicated visual support'}</li>
-              </ul>
-            </div>
-            <button className="plan-btn secondary" onClick={() => alert(isAr ? 'تم إرسال طلب التواصل مع فريق مبيعات الاستوديوهات!' : 'Contact request sent to Studio sales!')}>
-              {isAr ? 'تواصل مع المبيعات' : 'Contact Sales'}
-            </button>
-          </div>
+        .float-animation-slow {
+          animation: floatSlow 12s ease-in-out infinite;
+        }
+        .float-animation-medium {
+          animation: floatMedium 9s ease-in-out infinite;
+        }
+        .float-animation-fast {
+          animation: floatFast 7s ease-in-out infinite;
+        }
 
-        </div>
-      </section>
+        /* ── NAVBAR Styles ── */
+        .minimal-nav {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          padding: 40px 0;
+          z-index: 10;
+          position: relative;
+        }
+        .nav-logo {
+          font-size: 1.15rem;
+          font-weight: 600;
+          letter-spacing: 0.5px;
+          color: #e2e4e9;
+          display: flex;
+          align-items: center;
+          gap: 10px;
+        }
+        .logo-dot {
+          width: 10px;
+          height: 10px;
+          background-color: #a3a7b5;
+          border-radius: 50%;
+          display: inline-block;
+          box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+        }
+        .nav-links {
+          display: flex;
+          gap: 30px;
+        }
+        .nav-link {
+          font-size: 0.9rem;
+          color: #a0a5b5;
+          cursor: pointer;
+          transition: color 0.25s ease;
+          letter-spacing: 0.3px;
+        }
+        .nav-link:hover {
+          color: #ffffff;
+        }
 
-      {/* ══════ FOOTER & LEGAL ══════ */}
-      <footer className="landing-footer">
-        <div className="footer-links">
-          <span className="footer-link" onClick={() => setModal('terms')}>
-            {isAr ? 'شروط الاستخدام' : 'Terms of Service'}
-          </span>
-          <span className="footer-link" onClick={() => setModal('privacy')}>
-            {isAr ? 'سياسة الخصوصية' : 'Privacy Policy'}
-          </span>
-          <a href="https://twitter.com" target="_blank" rel="noreferrer" className="footer-link">
-            {isAr ? 'تويتر / X' : 'Twitter / X'}
-          </a>
-          <a href="https://github.com" target="_blank" rel="noreferrer" className="footer-link">
-            {isAr ? 'المجتمع' : 'Community'}
-          </a>
-        </div>
-        <div className="footer-copy">
-          © {new Date().getFullYear()} TURA Cinematic Prompt Engine. {isAr ? 'جميع الحقوق محفوظة.' : 'All rights reserved.'}
-        </div>
-      </footer>
+        /* ── HERO Content Styles ── */
+        .hero-content {
+          margin: auto 0;
+          z-index: 10;
+          position: relative;
+          max-width: 600px;
+        }
+        .hero-title-bold {
+          font-size: 3.8rem;
+          font-weight: 800;
+          line-height: 1.15;
+          letter-spacing: -1px;
+          color: #ffffff;
+          margin-bottom: 20px;
+        }
+        .text-glow {
+          color: #f1f2f5;
+          text-shadow: 0 0 40px rgba(255, 255, 255, 0.15);
+        }
+        .hero-subtitle-light {
+          font-size: 1.1rem;
+          color: #8f93a3;
+          font-weight: 300;
+          margin-bottom: 40px;
+          line-height: 1.6;
+        }
 
-      {/* ══════ LEGAL MODALS ══════ */}
-      {modal !== 'none' && (
-        <div className="modal-overlay" onClick={() => setModal('none')}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <span className="modal-title">
-                {modal === 'terms' 
-                  ? (isAr ? 'شروط الاستخدام والخدمة' : 'Terms of Service')
-                  : (isAr ? 'سياسة الخصوصية وحماية البيانات' : 'Privacy Policy')}
-              </span>
-              <button className="modal-close" onClick={() => setModal('none')}>×</button>
-            </div>
-            <div className="modal-body" style={{ direction: isAr ? 'rtl' : 'ltr', textAlign: isAr ? 'right' : 'left' }}>
-              {modal === 'terms' ? (
-                <>
-                  <h3>{isAr ? '1. قبول الشروط' : '1. Acceptance of Terms'}</h3>
-                  <p>{isAr ? 'باستخدامك لمحرك TURA، فإنك توافق على الالتزام بكافة الشروط والأحكام الموضحة هنا لضمان بيئة إبداعية آمنة.' : 'By accessing the TURA engine, you agree to be bound by these terms to ensure a secure creative environment.'}</p>
-                  
-                  <h3>{isAr ? '2. الملكية الفكرية للموجهات' : '2. Prompt Intellectual Property'}</h3>
-                  <p>{isAr ? 'كافة الموجهات (Prompts) التي تقوم ببنائها وتوليدها باستخدام الأداة تظل ملكيتك الفكرية الكاملة ولك حرية استخدامها تجارياً.' : 'All prompts constructed using the engine remain your exclusive intellectual property for commercial or personal use.'}</p>
-                  
-                  <h3>{isAr ? '3. إخلاء المسؤولية' : '3. Disclaimer'}</h3>
-                  <p>{isAr ? 'الأداة تقدم كمرشد فني لتنسيق الأوامر، ولا نتحمل مسؤولية مخرجات النماذج النهائية للذكاء الاصطناعي.' : 'The engine is provided as an artistic parameters reference guide. We are not liable for ultimate third-party AI image outputs.'}</p>
-                </>
-              ) : (
-                <>
-                  <h3>{isAr ? '1. جمع وتخزين البيانات' : '1. Data Collection & Storage'}</h3>
-                  <p>{isAr ? 'في الخطة الأساسية، يتم تخزين كافة الموجهات والسجل محلياً في متصفحك (LocalStorage) ولا نقوم برفعها لأي خوادم خارجية.' : 'On the Basic plan, all prompts and history entries are saved purely in your local browser storage. We do not upload them.'}</p>
-                  
-                  <h3>{isAr ? '2. ملفات تعريف الارتباط (Cookies)' : '2. Cookies'}</h3>
-                  <p>{isAr ? 'نستخدم ملفات تعريف ارتباط أساسية فقط لحفظ تفضيلات اللغة والنسق البصري لضمان استمرارية التجربة.' : 'We use strictly necessary cookies solely to persist session settings such as theme styles and locale selections.'}</p>
-                  
-                  <h3>{isAr ? '3. أمان البيانات' : '3. Data Security'}</h3>
-                  <p>{isAr ? 'نتبع أعلى معايير التشفير وحماية البيانات لضمان خصوصية الحسابات المشتركة في الخطط السحابية.' : 'We implement industry-standard security models to guarantee the robust confidentiality of Cloud/Studio persistent accounts.'}</p>
-                </>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+        /* ── BUTTON GROUP Styles ── */
+        .hero-button-group {
+          display: flex;
+          gap: 18px;
+          align-items: center;
+        }
+        .btn-get-started {
+          background: linear-gradient(135deg, #4d515a 0%, #2b2e35 100%);
+          color: #ffffff;
+          padding: 14px 34px;
+          font-size: 0.95rem;
+          font-weight: 600;
+          border-radius: 30px;
+          text-decoration: none;
+          transition: all 0.3s ease;
+          border: 1px solid rgba(255, 255, 255, 0.08);
+          box-shadow: 
+            0 4px 15px rgba(0, 0, 0, 0.35),
+            inset 0 1px 1px rgba(255, 255, 255, 0.1);
+        }
+        .btn-get-started:hover {
+          transform: translateY(-2px);
+          box-shadow: 
+            0 8px 25px rgba(0, 0, 0, 0.45),
+            inset 0 1px 1px rgba(255, 255, 255, 0.15);
+          background: linear-gradient(135deg, #5c606b 0%, #353841 100%);
+        }
+        .btn-learn-more {
+          color: #e2e5f0;
+          background: transparent;
+          border: 1px solid rgba(255, 255, 255, 0.15);
+          padding: 14px 34px;
+          font-size: 0.95rem;
+          font-weight: 500;
+          border-radius: 30px;
+          text-decoration: none;
+          transition: all 0.3s ease;
+        }
+        .btn-learn-more:hover {
+          background-color: rgba(255, 255, 255, 0.05);
+          border-color: rgba(255, 255, 255, 0.3);
+          transform: translateY(-2px);
+        }
 
+        /* ── RESPONSIVE TWEAKS ── */
+        @media (max-width: 768px) {
+          .dark-landing-wrapper {
+            padding: 0 6%;
+          }
+          .hero-title-bold {
+            font-size: 2.8rem;
+          }
+          .bg-sphere {
+            opacity: 0.5;
+          }
+          .sphere-top-right {
+            width: 120px;
+            height: 120px;
+            right: 5%;
+          }
+          .sphere-bottom-left {
+            width: 90px;
+            height: 90px;
+            left: 5%;
+          }
+        }
+      `}</style>
     </div>
   );
 }

@@ -2,6 +2,7 @@
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
+import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
 import type { Conflict, OptionItem, OptionGroup, Language } from '@/types';
 import {
@@ -33,6 +34,7 @@ const Icons: Record<string, React.JSX.Element> = {
   build: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><rect x="2" y="7" width="20" height="14" rx="2"/><polyline points="17 2 12 7 7 2"/></svg>,
   palette_icon: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>,
   history: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>,
+  menu: <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="18" x2="21" y2="18"/></svg>,
 };
 
 function getIcon(name: string) {
@@ -58,6 +60,58 @@ export default function EnginePage() {
   const [mobileView, setMobileView] = useState<'sections' | 'main' | 'prompt'>('main');
   const [langOpen, setLangOpen] = useState(false);
   const l = engine.lang;
+  const isConflicting = (cat: string, valueAr: string): { conflicting: boolean; reason?: string } => {
+    for (const conflict of CONFLICTS) {
+      let itemEn = '';
+      for (const sec of engine.sections) {
+        for (const g of sec.groups) {
+          if (g.cat === cat) {
+            const found = g.items.find(i => i.ar === valueAr);
+            if (found) {
+              itemEn = found.en;
+              break;
+            }
+          }
+        }
+      }
+
+      const matchesA = (conflict.a === cat) && (conflict.va === valueAr || conflict.va === itemEn);
+      const matchesB = (conflict.b === cat) && (conflict.vb === valueAr || conflict.vb === itemEn);
+
+      const hasMatch = (selectedVal: string | string[] | undefined, targetVal: string): boolean => {
+        if (!selectedVal) return false;
+        const vals = Array.isArray(selectedVal) ? selectedVal : [selectedVal];
+        for (const v of vals) {
+          if (v === targetVal) return true;
+          let resolvedEn = '';
+          for (const sec of engine.sections) {
+            for (const g of sec.groups) {
+              const found = g.items.find(i => i.ar === v);
+              if (found) {
+                resolvedEn = found.en;
+                break;
+              }
+            }
+          }
+          if (targetVal === resolvedEn) return true;
+        }
+        return false;
+      };
+
+      if (matchesA) {
+        if (hasMatch(engine.selections[conflict.b], conflict.vb)) {
+          return { conflicting: true, reason: l === 'ar' ? conflict.msgAr : conflict.msgEn };
+        }
+      }
+
+      if (matchesB) {
+        if (hasMatch(engine.selections[conflict.a], conflict.va)) {
+          return { conflicting: true, reason: l === 'ar' ? conflict.msgAr : conflict.msgEn };
+        }
+      }
+    }
+    return { conflicting: false };
+  };
 
   // Coupon & Premium Plan States
   const [couponCode, setCouponCode] = useState('');
@@ -65,6 +119,45 @@ export default function EnginePage() {
   const [couponError, setCouponError] = useState('');
   const [couponSuccess, setCouponSuccess] = useState('');
   const [showPremiumModal, setShowPremiumModal] = useState(false);
+
+  // Save Project States
+  const [showSaveModal, setShowSaveModal] = useState(false);
+  const [projectNameInput, setProjectNameInput] = useState('');
+
+  // Settings & Theme states
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const [settingsLangOpen, setSettingsLangOpen] = useState(false);
+  const [isDarkTheme, setIsDarkTheme] = useState(true);
+  const settingsRef = useRef<HTMLDivElement>(null);
+
+  // Load and apply theme on mount
+  useEffect(() => {
+    try {
+      const savedTheme = localStorage.getItem('tura-theme');
+      if (savedTheme === 'light') {
+        setIsDarkTheme(false);
+        document.body.classList.add('light');
+      } else {
+        setIsDarkTheme(true);
+        document.body.classList.remove('light');
+      }
+    } catch {}
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkTheme(prev => {
+      const next = !prev;
+      try {
+        localStorage.setItem('tura-theme', next ? 'dark' : 'light');
+      } catch {}
+      if (next) {
+        document.body.classList.remove('light');
+      } else {
+        document.body.classList.add('light');
+      }
+      return next;
+    });
+  };
 
   // Load premium state on mount
   useEffect(() => {
@@ -117,7 +210,7 @@ export default function EnginePage() {
     setSearchQuery10(engine.colorRule10 ? (l === 'ar' ? (COLOR_DATABASE.find(c => c.name === engine.colorRule10)?.nameAr || engine.colorRule10) : engine.colorRule10) : '');
   }, [engine.colorRule10, l]);
 
-  // Click outside to close color rule dropdowns
+  // Click outside to close color rule dropdowns & settings
   useEffect(() => {
     const handleOutsideClick = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
@@ -135,6 +228,11 @@ export default function EnginePage() {
       if (dropdownRef10.current && !dropdownRef10.current.contains(target)) {
         setDropdownOpen(prev => ({ ...prev, c10: false }));
         setSearchQuery10(engine.colorRule10 ? (l === 'ar' ? (COLOR_DATABASE.find(c => c.name === engine.colorRule10)?.nameAr || engine.colorRule10) : engine.colorRule10) : '');
+      }
+
+      if (settingsRef.current && !settingsRef.current.contains(target)) {
+        setSettingsOpen(false);
+        setSettingsLangOpen(false);
       }
     };
     
@@ -366,9 +464,9 @@ export default function EnginePage() {
                         <span className="color-dropdown-item-name">
                           {l === 'ar' ? color.nameAr : color.name}
                         </span>
-                        <span className="color-dropdown-item-en">
-                          {l === 'ar' ? color.name : color.nameAr}
-                        </span>
+                        {l === 'ar' ? (
+                          <span className="color-dropdown-item-en">{color.name}</span>
+                        ) : null}
                       </div>
                     </div>
                   ))}
@@ -472,8 +570,16 @@ export default function EnginePage() {
 
   const handleSave = () => {
     if (!engine.prompt) { flash(tUI('selectOptionsFirst')); return; }
-    if (engine.saveToHistory()) {
-      flash(tUI('savedToHistory'));
+    setProjectNameInput('');
+    setShowSaveModal(true);
+  };
+
+  const confirmSave = () => {
+    if (!engine.prompt) return;
+    const title = projectNameInput.trim() || (l === 'ar' ? `مشروع سينمائي ${formatDate(Date.now())}` : `Cinematic Project ${formatDate(Date.now())}`);
+    if (engine.saveToHistory(title)) {
+      flash(l === 'ar' ? 'تم حفظ المشروع بنجاح!' : 'Project saved successfully!');
+      setShowSaveModal(false);
     }
   };
 
@@ -523,59 +629,89 @@ export default function EnginePage() {
           <span>{tUI('colorLab')}</span>
         </button>
 
-        <button className={`tb-btn desktop-only ${engine.activeView === 'history' ? 'active' : ''}`}
-          data-tooltip-pos="bottom" data-tooltip={tUI('historyTooltip')}
-          onClick={() => { engine.setActiveView('history'); setMobileView('main'); }}>
-          {getIcon('history')}
-          <span>{tUI('history')}</span>
-        </button>
-
+        {/* Separator to push the settings hamburger button to the far left side */}
         <div className="topbar-sep" />
-        <div className="sel-count">{tSelectionCount(engine.selectionCount)}</div>
 
-        {/* Custom Premium Language Switcher Dropdown */}
-        <div className="lang-dropdown-container">
-          <button className={`tb-btn ${langOpen ? 'active' : ''}`} onClick={() => setLangOpen(!langOpen)} title={tUI('switchLanguage')}>
-            {getIcon('globe')}
-            <span>{
-              l === 'ar' ? 'عربي' :
-              l === 'en' ? 'English' :
-              l === 'fr' ? 'Français' :
-              l === 'es' ? 'Español' :
-              l === 'ko' ? '한국어' : '中文'
-            }</span>
+        {/* Settings Hamburger Dropdown Container */}
+        <div className="settings-dropdown-container" ref={settingsRef}>
+          <button className={`tb-btn ${settingsOpen ? 'active' : ''}`} onClick={() => setSettingsOpen(!settingsOpen)} title={l === 'ar' ? 'الإعدادات والمظهر' : 'Settings & Themes'}>
+            {getIcon('menu')}
           </button>
-          <div className={`lang-dropdown-menu ${langOpen ? 'open' : ''}`}>
-            {[
-              { code: 'ar', label: 'عربي', flag: '🇸🇦', indicator: 'AR' },
-              { code: 'en', label: 'English', flag: '🇺🇸', indicator: 'EN' },
-              { code: 'fr', label: 'Français', flag: '🇫🇷', indicator: 'FR' },
-              { code: 'es', label: 'Español', flag: '🇪🇸', indicator: 'ES' },
-              { code: 'ko', label: '한국어', flag: '🇰🇷', indicator: 'KO' },
-              { code: 'zh', label: '中文', flag: '🇨🇳', indicator: 'ZH' }
-            ].map(item => (
-              <button
-                key={item.code}
-                className={`lang-dropdown-item ${l === item.code ? 'active' : ''}`}
-                onClick={() => {
-                  engine.setLang(item.code as Language);
-                  setLangOpen(false);
-                }}
-              >
-                <span>{item.flag} {item.label}</span>
-                <span className="lang-indicator">{item.indicator}</span>
-              </button>
-            ))}
+          
+          <div className={`settings-dropdown-menu ${settingsOpen ? 'open' : ''}`}>
+            {/* Theme switcher option */}
+            <div className="settings-menu-item" onClick={toggleTheme}>
+              <div className="settings-menu-label-wrapper">
+                <span className="settings-menu-icon">{isDarkTheme ? getIcon('moon') : getIcon('sun')}</span>
+                <span>{l === 'ar' ? 'المظهر النهاري / الليلي' : 'Day / Night Mode'}</span>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent)' }}>
+                {isDarkTheme ? (l === 'ar' ? 'ليلي' : 'Night') : (l === 'ar' ? 'نهاري' : 'Day')}
+              </span>
+            </div>
+
+            {/* Projects option (Previously History) */}
+            <div className="settings-menu-item" onClick={() => { engine.setActiveView('history'); setSettingsOpen(false); setMobileView('main'); }}>
+              <div className="settings-menu-label-wrapper">
+                <span className="settings-menu-icon">📁</span>
+                <span>{l === 'ar' ? 'المشاريع' : 'Projects'}</span>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent)' }}>
+                {engine.history.length}
+              </span>
+            </div>
+
+            {/* Language row */}
+            <div className="settings-menu-item" onClick={() => setSettingsLangOpen(!settingsLangOpen)}>
+              <div className="settings-menu-label-wrapper">
+                <span className="settings-menu-icon">{getIcon('globe')}</span>
+                <span>{l === 'ar' ? 'اللغة' : 'Language'}</span>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: 'var(--accent)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                {
+                  l === 'ar' ? '🇸🇦 عربي' :
+                  l === 'en' ? '🇺🇸 English' :
+                  l === 'fr' ? '🇫🇷 Français' :
+                  l === 'es' ? '🇪🇸 Español' :
+                  l === 'ko' ? '🇰🇷 한국어' : '🇨🇳 中文'
+                }
+                <span>{settingsLangOpen ? '▲' : '▼'}</span>
+              </span>
+            </div>
+
+            {/* Expanded languages list */}
+            {settingsLangOpen && (
+              <div className="settings-lang-expanded-list" style={{ display: 'flex', flexDirection: 'column', gap: 2, padding: '4px 8px', borderTop: '1px solid var(--border)' }}>
+                {[
+                  { code: 'ar', label: 'عربي', flag: '🇸🇦' },
+                  { code: 'en', label: 'English', flag: '🇺🇸' },
+                  { code: 'fr', label: 'Français', flag: '🇫🇷' },
+                  { code: 'es', label: 'Español', flag: '🇪🇸' },
+                  { code: 'ko', label: '한국어', flag: '🇰🇷' },
+                  { code: 'zh', label: '中文', flag: '🇨🇳' }
+                ].map(item => (
+                  <button
+                    key={item.code}
+                    className={`settings-menu-item ${l === item.code ? 'active' : ''}`}
+                    style={{
+                      background: l === item.code ? 'var(--accent-glow)' : 'transparent',
+                      color: l === item.code ? 'var(--accent)' : 'var(--text2)',
+                      padding: '6px 8px',
+                      fontSize: '0.76rem'
+                    }}
+                    onClick={() => {
+                      engine.setLang(item.code as Language);
+                      setSettingsLangOpen(false);
+                      setSettingsOpen(false);
+                    }}
+                  >
+                    <span>{item.flag} {item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
-
-        {/* Premium Plan / Coupon Button */}
-        <button
-          className={`premium-status-btn ${isPremium ? 'pro' : 'free'}`}
-          onClick={() => setShowPremiumModal(true)}
-        >
-          <span>{isPremium ? (l === 'ar' ? 'عضوية PRO كاملة ✦' : 'PRO MEMBER ✦') : (l === 'ar' ? 'الخطة المجانية (مؤقتاً) ✦' : 'Free Trial ✦')}</span>
-        </button>
       </header>
 
       {/* ══════ MAIN LAYOUT ══════ */}
@@ -585,7 +721,11 @@ export default function EnginePage() {
         <nav className={`sidebar ${mobileView === 'sections' ? 'mobile-show' : ''}`}>
           <div className="nav-group-label">{tUI('coreSections')}</div>
           {engine.sections.map(sec => {
-            const selCount = sec.groups.reduce((sum, g) => sum + (engine.selections[g.cat] ? 1 : 0), 0);
+            const selCount = sec.groups.reduce((sum, g) => {
+              const val = engine.selections[g.cat];
+              if (Array.isArray(val)) return sum + (val.length > 0 ? 1 : 0);
+              return sum + (val ? 1 : 0);
+            }, 0);
             return (
               <div key={sec.key}
                 className={`sec-nav-item ${engine.activeSection === sec.key ? 'active' : ''} ${selCount > 0 ? 'has-sel' : ''}`}
@@ -625,22 +765,43 @@ export default function EnginePage() {
                   <span className="group-count">{grp.items.length}</span>
                 </div>
                 <div className="options-grid">
-                  {grp.items.map(item => (
-                    <div className="tooltip-wrap" key={item.ar}>
-                      <div className={`opt-card ${engine.selections[grp.cat] === item.ar ? 'selected' : ''}`}
-                        onClick={() => engine.toggleOption(grp.cat, item.ar)}>
-
-                        <span className="opt-name-ar">{tItemName(item)}</span>
-                        <span className="opt-name-en">{l === 'ar' ? item.en : (l === 'en' ? item.ar : item.en)}</span>
-                        <p className="opt-desc">{tItemTooltip(item)}</p>
-                        <span className={`opt-difficulty ${item.difficulty}`}>
-                          {item.difficulty === 'easy' ? tUI('easy')
-                            : item.difficulty === 'medium' ? tUI('medium')
-                            : tUI('hard')}
-                        </span>
+                  {grp.items.map(item => {
+                    const conflictCheck = isConflicting(grp.cat, item.ar);
+                    const isConf = conflictCheck.conflicting;
+                    return (
+                      <div className="tooltip-wrap" key={item.ar}>
+                        <div className={`opt-card ${(() => {
+                          const val = engine.selections[grp.cat];
+                          if (Array.isArray(val)) return val.includes(item.ar) ? 'selected' : '';
+                          return val === item.ar ? 'selected' : '';
+                        })()} ${isConf ? 'conflicting' : ''}`}
+                          onClick={() => {
+                            if (isConf) {
+                              flash(conflictCheck.reason || '');
+                              return;
+                            }
+                            engine.toggleOption(grp.cat, item.ar);
+                          }}
+                          style={isConf ? { opacity: 0.35, cursor: 'not-allowed', pointerEvents: 'auto' } : undefined}
+                          title={isConf ? conflictCheck.reason : undefined}
+                        >
+                           <span className="opt-name-ar">{tItemName(item)}</span>
+                           {l === 'ar' ? (
+                             <span className="opt-name-en">{item.en}</span>
+                           ) : l !== 'en' ? (
+                             <span className="opt-name-en">{item.en}</span>
+                           ) : null}
+                           <p className="opt-desc">
+                             {isConf ? (
+                               <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}>{conflictCheck.reason}</span>
+                             ) : (
+                               tItemTooltip(item)
+                             )}
+                           </p>
+                        </div>
                       </div>
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               </div>
             ))}
@@ -652,12 +813,12 @@ export default function EnginePage() {
           <div className={`view ${engine.activeView === 'history' ? 'active' : ''}`}>
             <div className="view-header">
               <div className="view-title-wrap">
-                <span className="view-title-icon">📜</span>
-                <span className="view-title-text">{tUI('savedHistoryTitle')}</span>
+                <span className="view-title-icon">📁</span>
+                <span className="view-title-text">{l === 'ar' ? 'المشاريع المحفوظة' : 'Saved Projects'}</span>
               </div>
 
               {engine.history.length > 0 && (
-                <button className="hist-btn danger" onClick={() => { engine.clearHistory(); flash(tUI('historyCleared')); }}>
+                <button className="hist-btn danger" onClick={() => { engine.clearHistory(); flash(l === 'ar' ? 'تم مسح جميع المشاريع' : 'All projects cleared'); }}>
                   {getIcon('trash')}
                   <span>{tUI('clearAll')}</span>
                 </button>
@@ -666,17 +827,24 @@ export default function EnginePage() {
 
             {engine.history.length === 0 ? (
               <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text3)' }}>
-                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: 10 }}>📜</span>
-                {tUI('historyEmpty')}
+                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: 10 }}>📁</span>
+                {l === 'ar' ? 'لا توجد مشاريع محفوظة بعد' : 'No saved projects yet'}
               </div>
             ) : (
               <div className="history-list">
                 {engine.history.map(entry => (
                   <div key={entry.id} className="history-item">
                     <div className="history-main">
-                      <div className="history-meta">
-                        <span className="history-time">{formatDate(entry.timestamp)}</span>
-                        {entry.subject && <span style={{ fontSize: '0.75rem', color: 'var(--text2)' }}>✦ {entry.subject}</span>}
+                      <div className="history-meta" style={{ display: 'flex', flexDirection: 'column', gap: 4, alignItems: 'flex-start' }}>
+                        {entry.title && (
+                          <div style={{ fontSize: '0.95rem', fontWeight: '800', color: 'var(--accent)', marginBottom: 2 }}>
+                            📁 {entry.title}
+                          </div>
+                        )}
+                        <div style={{ display: 'flex', gap: 8, fontSize: '0.72rem', color: 'var(--text3)' }}>
+                          <span className="history-time">{formatDate(entry.timestamp)}</span>
+                          {entry.subject && <span>✦ {entry.subject}</span>}
+                        </div>
                       </div>
                       <div className="history-prompt">{entry.prompt}</div>
                     </div>
@@ -782,9 +950,9 @@ export default function EnginePage() {
                           <div className="preset-card-name">
                             {l === 'ar' ? preset.nameAr : preset.nameEn}
                           </div>
-                          <div className="preset-card-name-en">
-                            {l === 'ar' ? preset.nameEn : preset.nameAr}
-                          </div>
+                          {l === 'ar' ? (
+                            <div className="preset-card-name-en">{preset.nameEn}</div>
+                          ) : null}
                           <div className="preset-card-desc">
                             {l === 'ar' ? preset.descAr : preset.descEn}
                           </div>
@@ -1167,9 +1335,33 @@ export default function EnginePage() {
           {/* Prompt Output */}
           <div className="prompt-output">
             <div className="prompt-label">✦ {tUI('finalPrompt')}</div>
-            <textarea className="prompt-box" readOnly
-              value={engine.prompt}
-              placeholder={tUI('promptPlaceholder')} />
+            <div className="prompt-box-wrapper" style={{ position: 'relative', display: 'flex', flexDirection: 'column' }}>
+              <textarea className="prompt-box" readOnly
+                value={engine.prompt}
+                placeholder={tUI('promptPlaceholder')}
+                style={{ paddingBottom: '48px' }}
+              />
+              {engine.prompt && (
+                <button 
+                  className="action-btn primary" 
+                  onClick={handleSave}
+                  style={{ 
+                    position: 'absolute', 
+                    bottom: '8px', 
+                    left: '8px',
+                    width: 'auto',
+                    padding: '6px 14px',
+                    fontSize: '0.78rem',
+                    borderRadius: 'calc(var(--radius) - 2px)',
+                    boxShadow: '0 2px 8px rgba(212, 160, 32, 0.3)',
+                    cursor: 'pointer'
+                  }}
+                >
+                  {getIcon('save')}
+                  <span>{l === 'ar' ? 'حفظ في المشاريع' : 'Save to Projects'}</span>
+                </button>
+              )}
+            </div>
 
             {/* Conflicts */}
             {engine.conflicts.length > 0 && (
@@ -1183,15 +1375,11 @@ export default function EnginePage() {
 
           {/* Actions */}
           <div className="action-bar">
-            <button className="action-btn primary" onClick={copyPrompt}>
+            <button className="action-btn primary" onClick={copyPrompt} style={{ flex: 2 }}>
               {getIcon('copy')}
               {tUI('copy')}
             </button>
-            <button className="action-btn secondary" onClick={handleSave}>
-              {getIcon('save')}
-              {tUI('save')}
-            </button>
-            <button className="action-btn secondary" onClick={clearAll}>
+            <button className="action-btn secondary" onClick={clearAll} style={{ flex: 1 }}>
               {getIcon('trash')}
               {tUI('clear')}
             </button>
@@ -1206,23 +1394,18 @@ export default function EnginePage() {
           {getIcon('map')}
           <span>{tUI('sections')}</span>
         </button>
-        <button className={`mob-nav-btn ${mobileView === 'main' ? 'active' : ''}`}
+        <button className={`mob-nav-btn ${(mobileView === 'main' && engine.activeView === 'main') ? 'active' : ''}`}
           onClick={() => { setMobileView('main'); engine.setActiveView('main'); }}>
           {getIcon('build')}
           <span>{tUI('options')}</span>
         </button>
 
-        <button className={`mob-nav-btn ${engine.activeView === 'colorlab' ? 'active' : ''}`}
+        <button className={`mob-nav-btn ${(mobileView === 'main' && engine.activeView === 'colorlab') ? 'active' : ''}`}
           onClick={() => { setMobileView('main'); engine.setActiveView('colorlab'); }}>
           {getIcon('palette')}
           <span>{tUI('colorLab')}</span>
         </button>
 
-        <button className={`mob-nav-btn ${engine.activeView === 'history' ? 'active' : ''}`}
-          onClick={() => { setMobileView('main'); engine.setActiveView('history'); }}>
-          {getIcon('history')}
-          <span>{tUI('history')}</span>
-        </button>
         <button className={`mob-nav-btn ${mobileView === 'prompt' ? 'active' : ''}`}
           onClick={() => setMobileView('prompt')}>
           {getIcon('copy')}
@@ -1299,6 +1482,62 @@ export default function EnginePage() {
             <div className="premium-modal-footer">
               <button className="premium-close-btn" onClick={() => setShowPremiumModal(false)}>
                 {l === 'ar' ? 'إغلاق' : 'Close'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ══════ SAVE PROJECT MODAL ══════ */}
+      {showSaveModal && (
+        <div className="premium-modal-overlay" onClick={() => setShowSaveModal(false)}>
+          <div className="premium-modal" onClick={(e) => e.stopPropagation()}>
+            <div className="premium-modal-banner" style={{ background: 'linear-gradient(135deg, rgba(212, 160, 32, 0.1), rgba(0, 0, 0, 0)), var(--bg3)' }}>
+              <div className="premium-modal-badge">📁</div>
+              <h2 className="premium-modal-title">
+                {l === 'ar' ? 'حفظ المشروع' : 'Save Project'}
+              </h2>
+              <p className="premium-modal-subtitle">
+                {l === 'ar' 
+                  ? 'يرجى إدخال اسم للمشروع للرجوع إليه وتعديله لاحقاً' 
+                  : 'Please enter a name for the project to recall and edit later'}
+              </p>
+            </div>
+            
+            <div className="premium-modal-body" style={{ gap: 14 }}>
+              <div className="coupon-input-group">
+                <label className="coupon-input-label">
+                  {l === 'ar' ? 'اسم المشروع' : 'Project Name'}
+                </label>
+                <input
+                  type="text"
+                  placeholder={l === 'ar' ? 'مثال: مشهد غابة نهارية' : 'e.g. Daylight Forest'}
+                  value={projectNameInput}
+                  onChange={(e) => setProjectNameInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') confirmSave();
+                  }}
+                  style={{
+                    width: '100%',
+                    background: 'var(--bg3)',
+                    border: '1px solid var(--border)',
+                    borderRadius: 'var(--radius)',
+                    padding: '10px 14px',
+                    color: 'var(--text1)',
+                    fontSize: '0.9rem',
+                    fontWeight: '600'
+                  }}
+                  autoFocus
+                />
+              </div>
+            </div>
+
+            <div className="premium-modal-footer" style={{ gap: 10 }}>
+              <button className="premium-close-btn" style={{ borderColor: 'transparent' }} onClick={() => setShowSaveModal(false)}>
+                {l === 'ar' ? 'إلغاء' : 'Cancel'}
+              </button>
+              <button className="coupon-apply-btn" onClick={confirmSave}>
+                {l === 'ar' ? 'حفظ المشروع' : 'Save'}
               </button>
             </div>
           </div>
