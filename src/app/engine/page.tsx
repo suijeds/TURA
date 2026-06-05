@@ -130,6 +130,90 @@ export default function EnginePage() {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
 
+  // Cinema Assistant states
+  const [chatInput, setChatInput] = useState('');
+  const [apiKeyInput, setApiKeyInput] = useState('');
+  const [apiKeySaved, setApiKeySaved] = useState(false);
+  const [settingsAiBrainOpen, setSettingsAiBrainOpen] = useState(false);
+  const [showTemplateSelect, setShowTemplateSelect] = useState(false);
+  const chatEndRef = useRef<HTMLDivElement>(null);
+  const templateSelectRef = useRef<HTMLDivElement>(null);
+
+  // Load API key input display on mount
+  useEffect(() => {
+    if (engine.aiApiKey) {
+      setApiKeyInput(engine.aiApiKey);
+      setApiKeySaved(true);
+    }
+  }, [engine.aiApiKey]);
+
+  // Click outside to close template selector dropdown
+  useEffect(() => {
+    if (!showTemplateSelect) return;
+    const handleOutsideClick = (e: MouseEvent) => {
+      const target = e.target as HTMLElement;
+      if (templateSelectRef.current && !templateSelectRef.current.contains(target)) {
+        setShowTemplateSelect(false);
+      }
+    };
+    document.addEventListener('mousedown', handleOutsideClick);
+    return () => document.removeEventListener('mousedown', handleOutsideClick);
+  }, [showTemplateSelect]);
+
+  // Auto-scroll chat to bottom
+  useEffect(() => {
+    chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+  }, [engine.chatMessages, engine.isChatLoading]);
+
+  const handleSendChat = () => {
+    if (!chatInput.trim() || engine.isChatLoading) return;
+    engine.sendChatMessage(chatInput);
+    setChatInput('');
+  };
+
+  const handleSaveApiKey = () => {
+    engine.saveAiApiKey(apiKeyInput.trim());
+    setApiKeySaved(true);
+    setTimeout(() => setApiKeySaved(false), 2000);
+  };
+
+  // Simple markdown renderer for assistant messages
+  const renderMarkdown = (text: string) => {
+    // Split by code blocks first
+    const parts = text.split(/(```[\s\S]*?```)/g);
+    return parts.map((part, i) => {
+      if (part.startsWith('```')) {
+        const code = part.replace(/^```\w*\n?/, '').replace(/```$/, '');
+        return <pre key={i}>{code}</pre>;
+      }
+      // Process inline markdown
+      const lines = part.split('\n');
+      return lines.map((line, j) => {
+        // Headers
+        if (line.startsWith('### ')) return <h3 key={`${i}-${j}`}>{line.slice(4)}</h3>;
+        if (line.startsWith('## ')) return <h2 key={`${i}-${j}`}>{line.slice(3)}</h2>;
+        if (line.startsWith('# ')) return <h1 key={`${i}-${j}`}>{line.slice(2)}</h1>;
+        if (line.startsWith('---')) return <hr key={`${i}-${j}`} />;
+        if (line.trim() === '') return <br key={`${i}-${j}`} />;
+        
+        // Bold and code inline
+        const processed = line
+          .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
+          .replace(/`([^`]+)`/g, '<code>$1</code>');
+        
+        // List items
+        if (line.match(/^\d+\. /)) {
+          return <div key={`${i}-${j}`} style={{ paddingInlineStart: 8 }} dangerouslySetInnerHTML={{ __html: processed }} />;
+        }
+        if (line.startsWith('- ') || line.startsWith('* ')) {
+          return <div key={`${i}-${j}`} style={{ paddingInlineStart: 8 }} dangerouslySetInnerHTML={{ __html: '• ' + processed.slice(2) }} />;
+        }
+        
+        return <span key={`${i}-${j}`} dangerouslySetInnerHTML={{ __html: processed }} />;
+      });
+    });
+  };
+
   // Load and apply theme on mount
   useEffect(() => {
     try {
@@ -629,6 +713,13 @@ export default function EnginePage() {
           <span>{tUI('colorLab')}</span>
         </button>
 
+        <button className={`tb-btn desktop-only ${engine.activeView === 'assistant' ? 'active' : ''}`}
+          data-tooltip-pos="bottom" data-tooltip={l === 'ar' ? 'المساعد السينمائي الذكي' : 'Cinema AI Assistant'}
+          onClick={() => { engine.setActiveView('assistant'); setMobileView('main'); }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/><path d="M8 10h.01M12 10h.01M16 10h.01"/></svg>
+          <span>{l === 'ar' ? 'المساعد' : 'Assistant'}</span>
+        </button>
+
         {/* Separator to push the settings hamburger button to the far left side */}
         <div className="topbar-sep" />
 
@@ -660,6 +751,53 @@ export default function EnginePage() {
                 {engine.history.length}
               </span>
             </div>
+
+            {/* AI Brain — API Key */}
+            <div className="settings-menu-item" onClick={() => setSettingsAiBrainOpen(!settingsAiBrainOpen)}>
+              <div className="settings-menu-label-wrapper">
+                <span className="settings-menu-icon">🧠</span>
+                <span>{l === 'ar' ? 'عقل المساعد' : 'Assistant Brain'}</span>
+              </div>
+              <span style={{ fontSize: '0.72rem', color: engine.aiApiKey ? '#22c55e' : 'var(--text3)', display: 'flex', alignItems: 'center', gap: 4 }}>
+                {engine.aiApiKey ? (l === 'ar' ? '● متصل' : '● Active') : (l === 'ar' ? '○ غير مفعّل' : '○ Inactive')}
+                <span>{settingsAiBrainOpen ? '▲' : '▼'}</span>
+              </span>
+            </div>
+
+            {settingsAiBrainOpen && (
+              <div className="settings-ai-brain">
+                <div className="settings-ai-brain-title">
+                  🔑 {l === 'ar' ? 'مفتاح Gemini API' : 'Gemini API Key'}
+                </div>
+                <div className="api-key-input-row">
+                  <input
+                    type="password"
+                    className="api-key-input"
+                    placeholder={l === 'ar' ? 'أدخل المفتاح هنا...' : 'Enter API key...'}
+                    value={apiKeyInput}
+                    onChange={(e) => { setApiKeyInput(e.target.value); setApiKeySaved(false); }}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                  <button
+                    className="api-key-save-btn"
+                    onClick={(e) => { e.stopPropagation(); handleSaveApiKey(); }}
+                    disabled={!apiKeyInput.trim()}
+                  >
+                    {l === 'ar' ? '💾 حفظ' : '💾 Save'}
+                  </button>
+                </div>
+                {apiKeySaved && (
+                  <div className="api-key-status saved">
+                    ✅ {l === 'ar' ? 'تم حفظ المفتاح بنجاح' : 'Key saved successfully'}
+                  </div>
+                )}
+                {!engine.aiApiKey && !apiKeySaved && (
+                  <div className="api-key-status empty">
+                    {l === 'ar' ? 'أدخل مفتاح Gemini API لتفعيل المساعد السينمائي' : 'Enter your Gemini API key to activate the Cinema Assistant'}
+                  </div>
+                )}
+              </div>
+            )}
 
             {/* Language row */}
             <div className="settings-menu-item" onClick={() => setSettingsLangOpen(!settingsLangOpen)}>
@@ -878,7 +1016,200 @@ export default function EnginePage() {
             )}
           </div>
 
-          {/* 5. COLOR LAB VIEW */}
+          {/* 5. CINEMA ASSISTANT VIEW */}
+          <div className={`view ${engine.activeView === 'assistant' ? 'active' : ''}`}>
+            <div className="assistant-view">
+              <div className="assistant-header">
+                <h2 className="assistant-title">
+                  🎬 {l === 'ar' ? 'المساعد السينمائي' : 'Cinema Assistant'}
+                </h2>
+                <p className="assistant-subtitle">
+                  {l === 'ar'
+                    ? 'خبير دكوباج سينمائي يصنع لك Shot Lists احترافية ويفهم كل إعدادات TURA'
+                    : 'Professional cinematic decoupage expert — creates Shot Lists and understands all TURA settings'}
+                </p>
+              </div>
+
+              {!engine.aiApiKey ? (
+                <div className="chat-no-key">
+                  <div className="chat-no-key-icon">🧠</div>
+                  <div className="chat-no-key-title">
+                    {l === 'ar' ? 'عقل المساعد غير مفعّل' : 'Assistant Brain Not Active'}
+                  </div>
+                  <div className="chat-no-key-desc">
+                    {l === 'ar'
+                      ? 'أضف مفتاح Gemini API من الإعدادات ← عقل المساعد لتفعيل المساعد السينمائي الذكي'
+                      : 'Add your Gemini API key from Settings → Assistant Brain to activate the AI Cinema Assistant'}
+                  </div>
+                </div>
+              ) : (
+                <>
+                  <div className="assistant-toolbar">
+                    <div
+                      className={`color-lab-toggle ${engine.isColorLabLinked ? 'active' : ''}`}
+                      onClick={() => engine.setIsColorLabLinked(!engine.isColorLabLinked)}
+                    >
+                      <div className="toggle-switch" />
+                      <span>
+                        {l === 'ar'
+                          ? (engine.isColorLabLinked ? '🎨 معمل الألوان مربوط' : '🎨 ربط معمل الألوان')
+                          : (engine.isColorLabLinked ? '🎨 Color Lab Linked' : '🎨 Link Color Lab')}
+                      </span>
+                    </div>
+                    {engine.chatMessages.length > 0 && (
+                      <button className="clear-chat-btn" onClick={engine.clearChat}>
+                        {getIcon('trash')}
+                        {l === 'ar' ? 'مسح المحادثة' : 'Clear Chat'}
+                      </button>
+                    )}
+                  </div>
+
+                  <div className="chat-messages">
+                    {engine.chatMessages.length === 0 ? (
+                      <div className="chat-welcome">
+                        <div className="chat-welcome-icon">🎬</div>
+                        <div className="chat-welcome-title">
+                          {l === 'ar' ? 'مرحباً! أنا خبير الدكوباج السينمائي' : 'Hello! I\'m your Cinema Decoupage Expert'}
+                        </div>
+                        <div className="chat-welcome-subtitle">
+                          {l === 'ar'
+                            ? 'صف لي المشهد وسأصنع لك Shot List كامل مع كل التفاصيل التقنية والبرومتات الجاهزة'
+                            : 'Describe your scene and I\'ll create a complete Shot List with all technical details and ready-to-use prompts'}
+                        </div>
+                        <div className="chat-welcome-suggestions">
+                          {(l === 'ar'
+                            ? ['مشهد مطاردة في شوارع ضيقة ليلاً', 'حوار درامي بين شخصيتين في مقهى', 'مشهد افتتاحي لفيلم خيال علمي']
+                            : ['Night chase scene in narrow streets', 'Dramatic dialogue in a café', 'Opening scene for a sci-fi film']
+                          ).map((suggestion, i) => (
+                            <button
+                              key={i}
+                              className="chat-suggestion"
+                              onClick={() => { setChatInput(suggestion); }}
+                            >
+                              {suggestion}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    ) : (
+                      engine.chatMessages.map(msg => (
+                        <div key={msg.id} className={`chat-bubble ${msg.role}`}>
+                          {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
+                        </div>
+                      ))
+                    )}
+
+                    {engine.isChatLoading && (
+                      <div className="chat-loading">
+                        <div className="chat-loading-dots">
+                          <span /><span /><span />
+                        </div>
+                      </div>
+                    )}
+                    <div ref={chatEndRef} />
+                  </div>
+
+                  <div className="chat-input-area">
+                    {/* Color Template Selector Dropdown Trigger */}
+                    <div className="chat-template-select-container" ref={templateSelectRef}>
+                      <button
+                        className={`chat-template-btn ${engine.activeColorTemplate ? 'active' : ''}`}
+                        onClick={() => setShowTemplateSelect(!showTemplateSelect)}
+                        title={l === 'ar' ? 'اختيار قالب ألوان من المشاريع' : 'Select color template from projects'}
+                      >
+                        🎨 {l === 'ar' ? 'قالب' : 'Template'}
+                      </button>
+
+                      {showTemplateSelect && (
+                        <div className="chat-template-dropdown">
+                          <div className="chat-template-dropdown-header">
+                            {l === 'ar' ? 'اختر قالب ألوان' : 'Select Color Template'}
+                          </div>
+                          <div className="chat-template-dropdown-list">
+                            {engine.history.length === 0 ? (
+                              <div className="chat-template-empty">
+                                {l === 'ar' ? 'لا توجد مشاريع محفوظة. احفظ مشروعاً أولاً لاستخدامه كقالب!' : 'No saved projects. Save a project first to use as a template!'}
+                              </div>
+                            ) : (
+                              engine.history.map(entry => (
+                                <div
+                                  key={entry.id}
+                                  className={`chat-template-item ${engine.activeColorTemplate?.id === entry.id ? 'selected' : ''}`}
+                                  onClick={() => {
+                                    engine.setActiveColorTemplate(entry);
+                                    setShowTemplateSelect(false);
+                                    flash(l === 'ar' ? `تم ربط ألوان قالب: ${entry.title || 'بدون عنوان'}` : `Linked colors from template: ${entry.title || 'Untitled'}`);
+                                    // Make sure Color Lab linking is toggled ON when selecting a template
+                                    if (!engine.isColorLabLinked) {
+                                      engine.setIsColorLabLinked(true);
+                                    }
+                                  }}
+                                >
+                                  <span className="template-item-icon">📁</span>
+                                  <div className="template-item-info">
+                                    <span className="template-item-title">{entry.title || (l === 'ar' ? 'مشروع بدون عنوان' : 'Untitled Project')}</span>
+                                    <span className="template-item-details">
+                                      {entry.colorRule60 || entry.activePreset || entry.colorGrading ? (l === 'ar' ? 'يحتوي على ألوان' : 'Contains colors') : (l === 'ar' ? 'لا يحتوي على ألوان' : 'No colors')}
+                                    </span>
+                                  </div>
+                                </div>
+                              ))
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="chat-input-wrapper">
+                      <textarea
+                        className="chat-input"
+                        placeholder={l === 'ar' ? 'صف المشهد أو اسأل سؤالاً سينمائياً...' : 'Describe a scene or ask a cinematic question...'}
+                        value={chatInput}
+                        onChange={(e) => setChatInput(e.target.value)}
+                        onKeyDown={(e) => {
+                          if (e.key === 'Enter' && !e.shiftKey) {
+                            e.preventDefault();
+                            handleSendChat();
+                          }
+                        }}
+                        rows={1}
+                      />
+                      {engine.activeColorTemplate && (
+                        <div className="active-template-badge">
+                          <span>🎨 {engine.activeColorTemplate.title || 'Template'}</span>
+                          <button
+                            className="clear-template-btn"
+                            onClick={() => {
+                              engine.setActiveColorTemplate(null);
+                              flash(l === 'ar' ? 'تم إلغاء ربط قالب الألوان' : 'Color template unlinked');
+                            }}
+                            title={l === 'ar' ? 'إلغاء ربط القالب' : 'Unlink template'}
+                          >
+                            ×
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                    
+                    <button
+                      className="chat-send-btn"
+                      onClick={handleSendChat}
+                      disabled={!chatInput.trim() || engine.isChatLoading}
+                      title={l === 'ar' ? 'إرسال' : 'Send'}
+                    >
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                        <line x1="22" y1="2" x2="11" y2="13" />
+                        <polygon points="22 2 15 22 11 13 2 9 22 2" />
+                      </svg>
+                    </button>
+                  </div>
+
+                </>
+              )}
+            </div>
+          </div>
+
+          {/* 6. COLOR LAB VIEW */}
           <div className={`view ${engine.activeView === 'colorlab' ? 'active' : ''}`}>
             <div className="colorlab-view">
               <div className="colorlab-header">
@@ -1404,6 +1735,12 @@ export default function EnginePage() {
           onClick={() => { setMobileView('main'); engine.setActiveView('colorlab'); }}>
           {getIcon('palette')}
           <span>{tUI('colorLab')}</span>
+        </button>
+
+        <button className={`mob-nav-btn ${(mobileView === 'main' && engine.activeView === 'assistant') ? 'active' : ''}`}
+          onClick={() => { setMobileView('main'); engine.setActiveView('assistant'); }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M21 15a2 2 0 01-2 2H7l-4 4V5a2 2 0 012-2h14a2 2 0 012 2z"/></svg>
+          <span>{l === 'ar' ? 'المساعد' : 'AI'}</span>
         </button>
 
         <button className={`mob-nav-btn ${mobileView === 'prompt' ? 'active' : ''}`}

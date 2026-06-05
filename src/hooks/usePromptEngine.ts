@@ -3,7 +3,8 @@ import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SECTIONS, PLATFORMS, SCORE_CATS, CONFLICTS } from '@/data/sections';
 import { COLOR_PRESETS, PRESET_CATEGORIES } from '@/data/colorPresets';
 import type { PresetCategory } from '@/data/colorPresets';
-import type { Language, ColorGradingState } from '@/types';
+import type { Language, ColorGradingState, ChatMessage } from '@/types';
+import { buildSystemPrompt } from '@/lib/systemPrompt';
 
 interface HistoryEntry {
   id: string;
@@ -125,7 +126,7 @@ export function usePromptEngine() {
   const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
   const [activePlatform, setActivePlatform] = useState('kling3');
   const [subject, setSubject] = useState('');
-  const [activeView, setActiveView] = useState<'main' | 'history' | 'colorlab'>('main');
+  const [activeView, setActiveView] = useState<'main' | 'history' | 'colorlab' | 'assistant'>('main');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [colorGrading, setColorGradingRaw] = useState<ColorGradingState>(initialColorGrading);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -133,6 +134,13 @@ export function usePromptEngine() {
   const [colorRule60, setColorRule60] = useState<string | null>(null);
   const [colorRule30, setColorRule30] = useState<string | null>(null);
   const [colorRule10, setColorRule10] = useState<string | null>(null);
+
+  // ═══ CINEMA ASSISTANT STATE ═══
+  const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
+  const [isChatLoading, setIsChatLoading] = useState(false);
+  const [isColorLabLinked, setIsColorLabLinked] = useState(false);
+  const [aiApiKey, setAiApiKeyRaw] = useState('');
+  const [activeColorTemplate, setActiveColorTemplate] = useState<HistoryEntry | null>(null);
 
   // Wrap setColorGrading to clear active preset on manual edits
   const setColorGrading: typeof setColorGradingRaw = useCallback((action) => {
@@ -169,6 +177,19 @@ export function usePromptEngine() {
       localStorage.setItem('tura-history', JSON.stringify(history));
     } catch {}
   }, [history]);
+
+  // Load AI API key from localStorage on mount
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('tura-ai-key');
+      if (saved) setAiApiKeyRaw(saved);
+    } catch {}
+  }, []);
+
+  const saveAiApiKey = useCallback((key: string) => {
+    setAiApiKeyRaw(key);
+    try { localStorage.setItem('tura-ai-key', key); } catch {}
+  }, []);
 
   const toggleLang = useCallback(() => {
     setLang(prev => {
@@ -387,6 +408,119 @@ export function usePromptEngine() {
 
   const currentSection = SECTIONS.find(s => s.key === activeSection) || SECTIONS[0];
 
+  // ═══ CINEMA ASSISTANT: SEND MESSAGE ═══
+  const sendChatMessage = useCallback(async (userMessage: string) => {
+    if (!userMessage.trim() || !aiApiKey) return;
+
+    const userMsg: ChatMessage = {
+      id: Date.now().toString(36) + 'u',
+      role: 'user',
+      content: userMessage.trim(),
+      timestamp: Date.now(),
+    };
+
+    setChatMessages(prev => [...prev, userMsg]);
+    setIsChatLoading(true);
+
+    try {
+      // Build color lab data string if linked
+      let colorData: string | null = null;
+      if (isColorLabLinked) {
+        const parts: string[] = [];
+        if (activeColorTemplate) {
+          parts.push(`--- SELECTED COLOR TEMPLATE (from Project: ${activeColorTemplate.title || 'Untitled'}) ---`);
+          // Extract color grading details from the template
+          if (activeColorTemplate.colorGrading) {
+            const tempGradingParts = [];
+            const cg = activeColorTemplate.colorGrading;
+            if (cg.shadows.sat > 0) tempGradingParts.push(`Shadows: Hue ${cg.shadows.hue}°, Saturation ${cg.shadows.sat}%`);
+            if (cg.midtones.sat > 0) tempGradingParts.push(`Midtones: Hue ${cg.midtones.hue}°, Saturation ${cg.midtones.sat}%`);
+            if (cg.highlights.sat > 0) tempGradingParts.push(`Highlights: Hue ${cg.highlights.hue}°, Saturation ${cg.highlights.sat}%`);
+            if (cg.temperature !== 0) tempGradingParts.push(`Temperature Shift: ${cg.temperature}`);
+            if (cg.tint !== 0) tempGradingParts.push(`Tint Shift: ${cg.tint}`);
+            if (cg.contrast !== 0) tempGradingParts.push(`Contrast Shift: ${cg.contrast}`);
+            if (cg.saturation !== 0) tempGradingParts.push(`Saturation: ${cg.saturation}`);
+            if (cg.vibrance !== 0) tempGradingParts.push(`Vibrance: ${cg.vibrance}`);
+            if (cg.fade !== 0) tempGradingParts.push(`Fade: ${cg.fade}`);
+            if (cg.grain !== 0) tempGradingParts.push(`Film Grain: ${cg.grain}`);
+            if (cg.bloom !== 0) tempGradingParts.push(`Bloom: ${cg.bloom}`);
+            if (tempGradingParts.length > 0) parts.push(`Color Grading: ${tempGradingParts.join(', ')}`);
+          }
+          if (activeColorTemplate.activePreset) {
+            const pr = COLOR_PRESETS.find(p => p.id === activeColorTemplate.activePreset);
+            if (pr) parts.push(`Cinematic Color Preset: ${pr.nameEn} (${pr.descEn})`);
+          }
+          const rules = [];
+          if (activeColorTemplate.colorRule60) rules.push(`60% dominant [${activeColorTemplate.colorRule60}]`);
+          if (activeColorTemplate.colorRule30) rules.push(`30% secondary [${activeColorTemplate.colorRule30}]`);
+          if (activeColorTemplate.colorRule10) rules.push(`10% accent [${activeColorTemplate.colorRule10}]`);
+          if (rules.length > 0) parts.push(`60-30-10 Palette Rule: ${rules.join(', ')}`);
+        } else {
+          if (colorPrompt) parts.push(colorPrompt);
+          if (colorRulePrompt) parts.push(colorRulePrompt);
+          if (activePreset) {
+            const preset = COLOR_PRESETS.find(p => p.id === activePreset);
+            if (preset) parts.push(`Active Preset: ${preset.nameEn}`);
+          }
+        }
+        if (parts.length > 0) colorData = parts.join('\n');
+      }
+
+      const sysPrompt = buildSystemPrompt(lang, colorData);
+
+      // Build messages array (last 20 messages for context window)
+      const recentMessages = [...chatMessages, userMsg].slice(-20).map(m => ({
+        role: m.role,
+        content: m.content,
+      }));
+
+      const res = await fetch('/api/chat', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          apiKey: aiApiKey,
+          messages: recentMessages,
+          systemPrompt: sysPrompt,
+          lang,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        const errMsg: ChatMessage = {
+          id: Date.now().toString(36) + 'e',
+          role: 'assistant',
+          content: data.error || (lang === 'ar' ? 'حدث خطأ في الاتصال' : 'Connection error'),
+          timestamp: Date.now(),
+        };
+        setChatMessages(prev => [...prev, errMsg]);
+      } else {
+        const assistantMsg: ChatMessage = {
+          id: Date.now().toString(36) + 'a',
+          role: 'assistant',
+          content: data.content,
+          timestamp: Date.now(),
+        };
+        setChatMessages(prev => [...prev, assistantMsg]);
+      }
+    } catch {
+      const errMsg: ChatMessage = {
+        id: Date.now().toString(36) + 'x',
+        role: 'assistant',
+        content: lang === 'ar' ? 'خطأ في الاتصال بالخادم. تأكد من اتصالك بالإنترنت.' : 'Server connection error. Check your internet connection.',
+        timestamp: Date.now(),
+      };
+      setChatMessages(prev => [...prev, errMsg]);
+    } finally {
+      setIsChatLoading(false);
+    }
+  }, [aiApiKey, chatMessages, isColorLabLinked, colorPrompt, colorRulePrompt, activePreset, lang, activeColorTemplate]);
+
+  const clearChat = useCallback(() => {
+    setChatMessages([]);
+  }, []);
+
   return {
     lang, toggleLang, setLang,
     selections, toggleOption, applySelections, clearAll, selectionCount,
@@ -406,5 +540,10 @@ export function usePromptEngine() {
     colorRule60, colorRule30, colorRule10, setColorRule, resetColorRule, colorRulePrompt,
     // History
     history, saveToHistory, deleteHistoryEntry, clearHistory,
+    // Cinema Assistant
+    chatMessages, isChatLoading, sendChatMessage, clearChat,
+    isColorLabLinked, setIsColorLabLinked,
+    aiApiKey, saveAiApiKey,
+    activeColorTemplate, setActiveColorTemplate,
   };
 }

@@ -203,7 +203,7 @@ export const SCORE_CATS: ScoreCategory[] = [
   { key: 'tech', ar: 'تقني', en: 'Tech', keys: ['camera_body', 'lens_type', 'focal_length', 'aspect_ratio', 'mod_camera', 'depth_of_field'], pts: 25 },
   { key: 'style', ar: 'أسلوب', en: 'Style', keys: ['technique', 'mod_lenses'], pts: 25 },
   { key: 'color', ar: 'لون', en: 'Color', keys: ['lighting_setup', 'mod_color', 'env_lighting_texture'], pts: 25 },
-  { key: 'framing', ar: 'تأطير', en: 'Frame', keys: ['shot_size', 'subject_scale', 'advanced_framing', 'camera_movement', 'camera_motion_dynamics', 'aperture', 'mod_framing'], pts: 25 },
+  { key: 'framing', ar: 'تأطير', en: 'Frame', keys: ['shot_size', 'subject_scale', 'advanced_framing', 'camera_movement', 'camera_motion_dynamics', 'aperture', 'mod_framing', 'composition_style'], pts: 25 },
 ];
 
 export const CONFLICTS: Conflict[] = [
@@ -242,5 +242,14 @@ export const CONFLICTS: Conflict[] = [
   // 7. Lighting vs Environment
   { a: 'lighting_setup', va: 'الساعة الذهبية', b: 'lighting_setup', vb: 'نيون مدن', msgAr: '⚠ إضاءة الغروب الدافئة تتناقض مع إضاءة النيون الليلية الصاخبة', msgEn: '⚠ Warm golden hour sunlight conflicts with nocturnal urban neon lighting' },
   { a: 'lighting_setup', va: 'الساعة الذهبية', b: 'lighting_setup', vb: 'نور القمر', msgAr: '⚠ إضاءة الغروب الدافئة تتناقض مع إضاءة ضوء القمر الباردة', msgEn: '⚠ Warm golden hour sunlight conflicts with cold night moonlight shadows' },
-  { a: 'lighting_setup', va: 'نيون مدن', b: 'lighting_setup', vb: 'ضوء طبيعي فقط', msgAr: '⚠ لافتات النيون الليلية تتناقض مع فكرة استخدام الضوء الطبيعي البسيط فقط', msgEn: '⚠ Artificial urban neon setup conflicts with using pure natural light only' }
+  { a: 'lighting_setup', va: 'نيون مدن', b: 'lighting_setup', vb: 'ضوء طبيعي فقط', msgAr: '⚠ لافتات النيون الليلية تتناقض مع فكرة استخدام الضوء الطبيعي البسيط فقط', msgEn: '⚠ Artificial urban neon setup conflicts with using pure natural light only' },
+
+  // 8. Composition Style conflicts
+  { a: 'composition_style', va: 'زاوية مرتفعة (عين الطائر)', b: 'shot_size', vb: 'لقطة قريبة جداً', msgAr: '⚠ عين الطائر من الأعلى تتناقض مع اللقطة القريبة جداً للوجه', msgEn: '⚠ Bird\'s eye overhead view conflicts with extreme close-up facial detail' },
+  { a: 'composition_style', va: 'زاوية مرتفعة (عين الطائر)', b: 'composition_style', vb: 'زاوية منخفضة (مهيبة)', msgAr: '⚠ لا يمكن الجمع بين زاوية عين الطائر والزاوية المنخفضة في نفس اللقطة', msgEn: '⚠ Cannot combine bird\'s eye view with low angle in the same shot' },
+  { a: 'composition_style', va: 'زاوية منخفضة (مهيبة)', b: 'shot_size', vb: 'لقطة قريبة جداً', msgAr: '⚠ الزاوية المنخفضة المهيبة تتعارض مع اللقطة القريبة جداً', msgEn: '⚠ Low angle heroic framing conflicts with extreme close-up detail shots' },
+  { a: 'composition_style', va: 'التماثل البصري', b: 'composition_style', vb: 'قاعدة الأثلاث', msgAr: '⚠ التماثل المركزي يتناقض مع التوزيع غير المركزي لقاعدة الأثلاث', msgEn: '⚠ Centered symmetry conflicts with off-center Rule of Thirds placement' },
+  { a: 'composition_style', va: 'زاوية مرتفعة (عين الطائر)', b: 'camera_movement', vb: 'ستيديكام', msgAr: '⚠ عين الطائر (رأسي للأسفل) تتعارض مع تتبع الستيديكام الأرضي', msgEn: '⚠ Top-down bird\'s eye view conflicts with ground-level steadicam tracking' },
+  { a: 'composition_style', va: 'العمق (ثلاثي الأبعاد)', b: 'depth_of_field', vb: 'عزل شديد (Bokeh)', msgAr: '⚠ تكوين العمق يتطلب وضوح الطبقات الثلاث، العزل الشديد يطمس المقدمة والخلفية', msgEn: '⚠ Three-layer depth composition requires clear layers, extreme bokeh blurs foreground and background' },
+  { a: 'composition_style', va: 'الخطوط القيادية', b: 'depth_of_field', vb: 'عزل شديد (Bokeh)', msgAr: '⚠ الخطوط القيادية تحتاج وضوحاً بيئياً، العزل الشديد يطمسها', msgEn: '⚠ Leading lines need environmental clarity, extreme bokeh dissolves them' }
 ];

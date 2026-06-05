@@ -88,3 +88,24 @@ export interface ColorGradingState {
   bloom: number;         // 0 to +100
 }
 
+export interface ShotListItem {
+  shotNumber: number;
+  shotType: string;
+  camera: string;
+  lens: string;
+  focalLength: string;
+  lighting: string;
+  movement: string;
+  composition: string;
+  prompt: string;
+  description: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  role: 'user' | 'assistant';
+  content: string;
+  timestamp: number;
+  shotList?: ShotListItem[];
+}
+
