@@ -1,21 +1,23 @@
-/**
- * Builds the system prompt for the Cinema AI Assistant.
- * Dynamically includes Color Lab data when linked.
- */
-
 export function buildSystemPrompt(
   lang: string,
-  colorLabData?: string | null
+  colorLabData?: string | null,
+  depthData?: string | null
 ): string {
   const isAr = lang === 'ar';
 
   const colorSection = colorLabData
     ? isAr
-      ? `\n\n## بيانات معمل الألوان المربوط\nالمستخدم ربط معمل الألوان. يجب أن تُضمّن هذه المعلومات اللونية في كل برومت تولّده:\n${colorLabData}\n\nعند إنشاء أي برومت، أضف هذه المعلومات اللونية فيه تلقائياً.`
+      ? `\n\n## 🎨 بيانات معمل الألوان المربوطة\nالمستخدم ربط معمل الألوان الخاص به. قم بتضمين معلومات الألوان هذه في كل برومت تولده:\n${colorLabData}\n\nقم بدمج بيانات الألوان هذه تلقائيًا في كل برومت تقوم بإنشائه.`
       : `\n\n## Linked Color Lab Data\nThe user has linked their Color Lab. Include this color information in every prompt you generate:\n${colorLabData}\n\nAutomatically embed this color data into every prompt you create.`
     : isAr
       ? '\n\n## معمل الألوان\nمعمل الألوان غير مربوط حالياً. لا تذكر أي ألوان أو تدرجات لونية في البرومتات إلا إذا طلب المستخدم ذلك صراحةً.'
       : '\n\n## Color Lab\nColor Lab is not linked. Do NOT mention any colors or color grading in prompts unless the user explicitly requests it.';
+
+  const depthSection = depthData
+    ? isAr
+      ? `\n\n## 🎭 نظام طبقات العمق المربوط\nالمستخدم فعّل نظام طبقات العمق. يجب أن تُضمّن توزيع العمق هذا في كل برومت تولّده:\n${depthData}\n\nعند إنشاء أي برومت (Prompt)، تأكد من دمج تفاصيل هذا التوزيع مباشرة داخل نص البرومت الإنجليزي النهائي لتعكس المشهد ثلاثي الأبعاد بشكل دقيق.`
+      : `\n\n## 🎭 Linked Depth Layering System\nThe user has activated depth layering. Include this depth distribution in every prompt you generate:\n${depthData}\n\nWhen generating any Prompt, you MUST integrate these depth layer details directly into the final English prompt text to accurately represent the 3D depth of the scene.`
+    : '';
 
   if (isAr) {
     return `أنت **خبير دكوباج سينمائي محترف** مدمج في محرك TURA — أقوى محرك بناء برومبتات سينمائية في العالم.
@@ -78,7 +80,7 @@ Kodak 35mm, Bleach Bypass, Gritty Realism, Unconventional Cinematography, Archit
 - يمنع منعاً باتاً استخدام أو ابتكار أي كاميرا أو عدسة أو مصطلح تقني غير موجود في القوائم السابقة.
 - كل برومت تكتبه يجب أن يكون باللغة الإنجليزية.
 - حديثك مع المستخدم بالعربية لكن البرومتات بالإنجليزية.
-- لا تنسَ أن تراعي التعارضات التقنية (مثلاً لا تجمع بين IMAX ويد حرة Handheld).${colorSection}`;
+- لا تنسَ أن تراعي التعارضات التقنية (مثلاً لا تجمع بين IMAX ويد حرة Handheld).${colorSection}${depthSection}`;
   }
 
   return `You are a **professional cinematic decoupage expert** integrated into TURA — the world's most powerful cinematic prompt engine.
@@ -140,5 +142,5 @@ When creating a Shot List for a scene, provide for each shot:
 - Do NOT invent or use any cameras, lenses, or technical terms that are not in the lists above.
 - All prompts must be written in English.
 - Converse with the user in their language but write prompts in English.
-- Always respect technical conflicts (e.g., don't combine IMAX with Handheld).${colorSection}`;
+- Always respect technical conflicts (e.g., don't combine IMAX with Handheld).${colorSection}${depthSection}`;
 }

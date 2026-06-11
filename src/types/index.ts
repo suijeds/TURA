@@ -109,3 +109,34 @@ export interface ChatMessage {
   shotList?: ShotListItem[];
 }
 
+// ═══════════════════════════════════════
+// DEPTH LAYERING SYSTEM
+// ═══════════════════════════════════════
+export type DepthDensity = 'minimal' | 'sparse' | 'moderate' | 'dense' | 'packed';
+
+export interface DepthLayer {
+  focus: number;           // 0-100 — Focus Emphasis %
+  density: DepthDensity;   // Detail density level
+  description: string;     // User's custom description for this layer
+}
+
+export interface DepthLayeringState {
+  foreground: DepthLayer;
+  midground: DepthLayer;
+  background: DepthLayer;
+}
+
+export interface DepthPreset {
+  id: string;
+  ar: string;
+  en: string;
+  descAr: string;
+  descEn: string;
+  icon: string;
+  layers: {
+    foreground: number;  // focus %
+    midground: number;
+    background: number;
+  };
+}
+

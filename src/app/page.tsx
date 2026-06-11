@@ -53,7 +53,6 @@ export default function LandingPage() {
       <div className="glow-orb glow-orange"></div>
       <div className="glow-orb glow-blue"></div>
 
-      {/* ── HEADER NAVBAR ── */}
       <nav className="minimal-nav">
         <div className="nav-logo">
           <span className="logo-dot"></span>

@@ -2,8 +2,9 @@
 import { useState, useCallback, useMemo, useEffect } from 'react';
 import { SECTIONS, PLATFORMS, SCORE_CATS, CONFLICTS } from '@/data/sections';
 import { COLOR_PRESETS, PRESET_CATEGORIES } from '@/data/colorPresets';
+import { DEPTH_PRESETS } from '@/data/depthPresets';
 import type { PresetCategory } from '@/data/colorPresets';
-import type { Language, ColorGradingState, ChatMessage } from '@/types';
+import type { Language, ColorGradingState, ChatMessage, DepthLayeringState, DepthDensity } from '@/types';
 import { buildSystemPrompt } from '@/lib/systemPrompt';
 
 interface HistoryEntry {
@@ -20,6 +21,8 @@ interface HistoryEntry {
   colorRule30?: string | null;
   colorRule10?: string | null;
   title?: string;
+  depthLayering?: DepthLayeringState;
+  activeDepthPreset?: string | null;
 }
 
 const initialColorGrading: ColorGradingState = {
@@ -35,6 +38,37 @@ const initialColorGrading: ColorGradingState = {
   grain: 0,
   bloom: 0,
 };
+
+const initialDepthLayering: DepthLayeringState = {
+  foreground: { focus: 15, density: 'sparse', description: '' },
+  midground: { focus: 70, density: 'moderate', description: '' },
+  background: { focus: 15, density: 'minimal', description: '' },
+};
+
+function generateDepthPrompt(state: DepthLayeringState): string {
+  const densityLabels: Record<DepthDensity, string> = {
+    minimal: 'minimal detail',
+    sparse: 'sparse elements',
+    moderate: 'moderate detail',
+    dense: 'dense detail',
+    packed: 'densely packed elements',
+  };
+  const parts: string[] = [];
+  const layers: Array<{ key: keyof DepthLayeringState; label: string }> = [
+    { key: 'foreground', label: 'Foreground' },
+    { key: 'midground', label: 'Midground' },
+    { key: 'background', label: 'Background' },
+  ];
+  for (const { key, label } of layers) {
+    const layer = state[key];
+    let part = `${label} (${layer.focus}% focus, ${densityLabels[layer.density]})`;
+    if (layer.description.trim()) {
+      part += `: ${layer.description.trim()}`;
+    }
+    parts.push(part);
+  }
+  return `depth layering: ${parts.join('. ')}`;
+}
 
 function getHueColor(hue: number): string {
   if (hue < 20 || hue >= 340) return 'warm red-tinted';
@@ -126,7 +160,7 @@ export function usePromptEngine() {
   const [activeSection, setActiveSection] = useState(SECTIONS[0].key);
   const [activePlatform, setActivePlatform] = useState('kling3');
   const [subject, setSubject] = useState('');
-  const [activeView, setActiveView] = useState<'main' | 'history' | 'colorlab' | 'assistant'>('main');
+  const [activeView, setActiveView] = useState<'main' | 'history' | 'colorlab' | 'assistant' | 'depth'>('main');
   const [history, setHistory] = useState<HistoryEntry[]>([]);
   const [colorGrading, setColorGradingRaw] = useState<ColorGradingState>(initialColorGrading);
   const [activePreset, setActivePreset] = useState<string | null>(null);
@@ -134,6 +168,11 @@ export function usePromptEngine() {
   const [colorRule60, setColorRule60] = useState<string | null>(null);
   const [colorRule30, setColorRule30] = useState<string | null>(null);
   const [colorRule10, setColorRule10] = useState<string | null>(null);
+
+  // ═══ DEPTH LAYERING STATE ═══
+  const [depthLayering, setDepthLayeringRaw] = useState<DepthLayeringState>(initialDepthLayering);
+  const [activeDepthPreset, setActiveDepthPreset] = useState<string | null>(null);
+  const [isDepthLinked, setIsDepthLinked] = useState(false);
 
   // ═══ CINEMA ASSISTANT STATE ═══
   const [chatMessages, setChatMessages] = useState<ChatMessage[]>([]);
@@ -263,6 +302,84 @@ export function usePromptEngine() {
     setColorRule60(null);
     setColorRule30(null);
     setColorRule10(null);
+    setDepthLayeringRaw(initialDepthLayering);
+    setActiveDepthPreset(null);
+  }, []);
+
+  // ═══ DEPTH LAYERING FUNCTIONS ═══
+  const setDepthFocus = useCallback((layerKey: keyof DepthLayeringState, newValue: number) => {
+    setActiveDepthPreset(null);
+    setDepthLayeringRaw(prev => {
+      const clamped = Math.max(0, Math.min(100, Math.round(newValue)));
+      const oldValue = prev[layerKey].focus;
+      const delta = clamped - oldValue;
+      if (delta === 0) return prev;
+
+      // Proportional redistribution: distribute the delta among the other two layers
+      const otherKeys = (['foreground', 'midground', 'background'] as const).filter(k => k !== layerKey);
+      const otherTotal = otherKeys.reduce((sum, k) => sum + prev[k].focus, 0);
+      
+      const next = { ...prev };
+      if (otherTotal === 0) {
+        // Edge case: both others are 0, split remaining equally
+        const remaining = 100 - clamped;
+        next[otherKeys[0]] = { ...prev[otherKeys[0]], focus: Math.ceil(remaining / 2) };
+        next[otherKeys[1]] = { ...prev[otherKeys[1]], focus: Math.floor(remaining / 2) };
+      } else {
+        let remaining = 100 - clamped;
+        for (let i = 0; i < otherKeys.length; i++) {
+          const k = otherKeys[i];
+          if (i === otherKeys.length - 1) {
+            // Last one gets the remainder to ensure sum = 100
+            next[k] = { ...prev[k], focus: Math.max(0, remaining) };
+          } else {
+            const ratio = prev[k].focus / otherTotal;
+            const newFocus = Math.max(0, Math.round(remaining * ratio));
+            next[k] = { ...prev[k], focus: newFocus };
+            remaining -= newFocus;
+          }
+        }
+      }
+      next[layerKey] = { ...prev[layerKey], focus: clamped };
+      return next;
+    });
+  }, []);
+
+  const setDepthDensity = useCallback((layerKey: keyof DepthLayeringState, density: DepthDensity) => {
+    setActiveDepthPreset(null);
+    setDepthLayeringRaw(prev => ({
+      ...prev,
+      [layerKey]: { ...prev[layerKey], density }
+    }));
+  }, []);
+
+  const setDepthDescription = useCallback((layerKey: keyof DepthLayeringState, description: string) => {
+    setDepthLayeringRaw(prev => ({
+      ...prev,
+      [layerKey]: { ...prev[layerKey], description }
+    }));
+  }, []);
+
+  const applyDepthPreset = useCallback((presetId: string) => {
+    const preset = DEPTH_PRESETS.find(p => p.id === presetId);
+    if (!preset) return;
+    if (activeDepthPreset === presetId) {
+      // Toggle off: reset to default
+      setDepthLayeringRaw(initialDepthLayering);
+      setActiveDepthPreset(null);
+    } else {
+      setDepthLayeringRaw(prev => ({
+        foreground: { ...prev.foreground, focus: preset.layers.foreground },
+        midground: { ...prev.midground, focus: preset.layers.midground },
+        background: { ...prev.background, focus: preset.layers.background },
+      }));
+      setActiveDepthPreset(presetId);
+    }
+  }, [activeDepthPreset]);
+
+  const resetDepthLayering = useCallback(() => {
+    setDepthLayeringRaw(initialDepthLayering);
+    setActiveDepthPreset(null);
   }, []);
 
   const resetColorGrading = useCallback(() => {
@@ -297,6 +414,10 @@ export function usePromptEngine() {
     if (parts.length === 0) return '';
     return `strict 60-30-10 color palette: ${parts.join(', ')}`;
   }, [colorRule60, colorRule30, colorRule10]);
+
+  const depthPrompt = useMemo(() => {
+    return generateDepthPrompt(depthLayering);
+  }, [depthLayering]);
 
   const score = useMemo(() => {
     const cats = SCORE_CATS.map(sc => {
@@ -366,8 +487,15 @@ export function usePromptEngine() {
         result = colorRulePrompt;
       }
     }
+    if (depthPrompt) {
+      if (result) {
+        result += ', ' + depthPrompt;
+      } else {
+        result = depthPrompt;
+      }
+    }
     return result;
-  }, [selections, subject, colorPrompt, colorRulePrompt]);
+  }, [selections, subject, colorPrompt, colorRulePrompt, depthPrompt]);
 
   const conflicts = useMemo(() => {
     return CONFLICTS.filter(c => {
@@ -392,11 +520,13 @@ export function usePromptEngine() {
       colorRule60,
       colorRule30,
       colorRule10,
-      title: title || undefined
+      title: title || undefined,
+      depthLayering: JSON.parse(JSON.stringify(depthLayering)),
+      activeDepthPreset,
     };
     setHistory(prev => [entry, ...prev].slice(0, 50));
     return true;
-  }, [prompt, selections, subject, activePlatform, score.total, colorGrading, activePreset, colorRule60, colorRule30, colorRule10]);
+  }, [prompt, selections, subject, activePlatform, score.total, colorGrading, activePreset, colorRule60, colorRule30, colorRule10, depthLayering, activeDepthPreset]);
 
   const deleteHistoryEntry = useCallback((id: string) => {
     setHistory(prev => prev.filter(e => e.id !== id));
@@ -466,7 +596,13 @@ export function usePromptEngine() {
         if (parts.length > 0) colorData = parts.join('\n');
       }
 
-      const sysPrompt = buildSystemPrompt(lang, colorData);
+      // Build depth data string if linked
+      let depthData: string | null = null;
+      if (isDepthLinked && depthPrompt) {
+        depthData = depthPrompt;
+      }
+
+      const sysPrompt = buildSystemPrompt(lang, colorData, depthData);
 
       // Build messages array (last 20 messages for context window)
       const recentMessages = [...chatMessages, userMsg].slice(-20).map(m => ({
@@ -515,7 +651,7 @@ export function usePromptEngine() {
     } finally {
       setIsChatLoading(false);
     }
-  }, [aiApiKey, chatMessages, isColorLabLinked, colorPrompt, colorRulePrompt, activePreset, lang, activeColorTemplate]);
+  }, [aiApiKey, chatMessages, isColorLabLinked, colorPrompt, colorRulePrompt, activePreset, lang, activeColorTemplate, isDepthLinked, depthPrompt]);
 
   const clearChat = useCallback(() => {
     setChatMessages([]);
@@ -538,8 +674,13 @@ export function usePromptEngine() {
     colorPresets: COLOR_PRESETS, presetCategories: PRESET_CATEGORIES,
     // 60-30-10 Color Rule
     colorRule60, colorRule30, colorRule10, setColorRule, resetColorRule, colorRulePrompt,
+    // Depth Layering
+    depthLayering, setDepthFocus, setDepthDensity, setDepthDescription,
+    activeDepthPreset, applyDepthPreset, resetDepthLayering,
+    isDepthLinked, setIsDepthLinked, depthPrompt,
+    depthPresets: DEPTH_PRESETS,
     // History
-    history, saveToHistory, deleteHistoryEntry, clearHistory,
+    history, setHistory, saveToHistory, deleteHistoryEntry, clearHistory,
     // Cinema Assistant
     chatMessages, isChatLoading, sendChatMessage, clearChat,
     isColorLabLinked, setIsColorLabLinked,

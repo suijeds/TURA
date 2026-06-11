@@ -57,6 +57,73 @@ function useToast() {
 export default function EnginePage() {
   const engine = usePromptEngine();
   const { msg: toastMsg, show: toastShow, flash } = useToast();
+
+  // 📁 Import/Export Project Helpers
+  const exportProject = (entry: any) => {
+    try {
+      const dataStr = JSON.stringify([entry], null, 2);
+      const blob = new Blob([dataStr], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `TURA-Project-${entry.title ? entry.title.replace(/\s+/g, '_') : entry.id}.json`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+      flash(engine.lang === 'ar' ? 'تم تصدير المشروع بنجاح' : 'Project exported successfully');
+    } catch (err) {
+      flash(engine.lang === 'ar' ? 'فشل تصدير المشروع' : 'Failed to export project');
+    }
+  };
+
+  const handleImport = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+        const entries = Array.isArray(imported) ? imported : [imported];
+        
+        // Validate entries
+        const validEntries = entries.filter(entry => entry && entry.id && entry.prompt && entry.selections);
+        if (validEntries.length === 0) {
+          flash(engine.lang === 'ar' ? 'ملف غير صالح أو فارغ' : 'Invalid or empty backup file');
+          return;
+        }
+        
+        engine.setHistory((prev: any[]) => {
+          const merged = [...prev];
+          let addedCount = 0;
+          validEntries.forEach(entry => {
+            const exists = merged.some(h => h.id === entry.id);
+            if (!exists) {
+              merged.unshift(entry);
+              addedCount++;
+            } else {
+              // Duplicate ID: rename copy title and allocate new unique ID
+              const copiedEntry = {
+                ...entry,
+                id: `${entry.id}_copy_${Date.now()}`,
+                title: entry.title ? `${entry.title} (${engine.lang === 'ar' ? 'نسخة' : 'Copy'})` : `${engine.lang === 'ar' ? 'مشروع مستورد نسخة' : 'Imported Copy'}`,
+                timestamp: new Date().toISOString()
+              };
+              merged.unshift(copiedEntry);
+              addedCount++;
+            }
+          });
+          flash(engine.lang === 'ar' ? `تم استيراد ${addedCount} من المشاريع` : `Imported ${addedCount} projects successfully`);
+          return merged.slice(0, 50);
+        });
+      } catch (err) {
+        flash(engine.lang === 'ar' ? 'فشل قراءة الملف كـ JSON' : 'Failed to parse JSON file');
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
+  };
+
   const [mobileView, setMobileView] = useState<'sections' | 'main' | 'prompt'>('main');
   const [langOpen, setLangOpen] = useState(false);
   const l = engine.lang;
@@ -713,6 +780,13 @@ export default function EnginePage() {
           <span>{tUI('colorLab')}</span>
         </button>
 
+        <button className={`tb-btn desktop-only ${engine.activeView === 'depth' ? 'active' : ''}`}
+          data-tooltip-pos="bottom" data-tooltip={l === 'ar' ? 'طبقات العمق (ثلاثي الأبعاد)' : 'Three-Layer Depth System'}
+          onClick={() => { engine.setActiveView('depth'); setMobileView('main'); }}>
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>{l === 'ar' ? 'طبقات العمق' : 'Depth Layers'}</span>
+        </button>
+
         <button className={`tb-btn desktop-only ${engine.activeView === 'assistant' ? 'active' : ''}`}
           data-tooltip-pos="bottom" data-tooltip={l === 'ar' ? 'المساعد السينمائي الذكي' : 'Cinema AI Assistant'}
           onClick={() => { engine.setActiveView('assistant'); setMobileView('main'); }}>
@@ -929,6 +1003,665 @@ export default function EnginePage() {
                            ) : l !== 'en' ? (
                              <span className="opt-name-en">{item.en}</span>
                            ) : null}
+
+                            {/* Narrative Camera Movements & Compositions & Technical Options SVG Blueprint Diagrams */}
+                            {['camera_movement', 'composition_style', 'shot_size', 'lens_type', 'subject_scale', 'advanced_framing', 'aperture', 'focal_length', 'depth_of_field', 'aspect_ratio'].includes(grp.cat) && (
+                              <div className="camera-blueprint-wrapper" style={{
+                                width: '100%',
+                                height: '110px',
+                                background: '#070709',
+                                border: '1px solid rgba(255,255,255,0.03)',
+                                borderRadius: '10px',
+                                marginTop: '10px',
+                                marginBottom: '10px',
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                overflow: 'hidden',
+                                position: 'relative'
+                              }}>
+                                {/* Grid Pattern */}
+                                <div style={{
+                                  position: 'absolute',
+                                  inset: 0,
+                                  backgroundImage: 'radial-gradient(rgba(212, 160, 32, 0.1) 1px, transparent 0)',
+                                  backgroundSize: '12px 12px',
+                                  opacity: 0.7
+                                }} />
+                                
+                                <svg width="100%" height="90" viewBox="0 0 240 90" fill="none" style={{ position: 'relative', zIndex: 1 }}>
+                                  {/* Blueprint Border and Guides */}
+                                  <rect x="15" y="10" width="210" height="70" rx="6" stroke="rgba(212, 160, 32, 0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                  
+                                  {/* ── CAMERA MOVEMENTS ── */}
+                                  {item.en === 'Locked Off Static' && (
+                                    <>
+                                      <rect x="70" y="22" width="100" height="46" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2" opacity="0.8"/>
+                                      <circle cx="120" cy="45" r="4" fill="var(--accent)"/>
+                                      <path d="M120 28v34M103 45h34" stroke="var(--accent)" strokeWidth="1" strokeDasharray="2 2" opacity="0.5"/>
+                                      <path d="M40 45h20M180 45h20" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+                                      <circle cx="40" cy="45" r="2" fill="rgba(255,255,255,0.3)"/>
+                                      <circle cx="200" cy="45" r="2" fill="rgba(255,255,255,0.3)"/>
+                                    </>
+                                  )}
+                                  
+                                  {item.en === 'Horizontal Pan' && (
+                                    <>
+                                      <rect x="85" y="22" width="70" height="46" rx="4" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                      <rect x="85" y="22" width="70" height="46" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M40 45h35M40 45l8-5M40 45l8 5" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <path d="M200 45h-35M200 45l-8-5M200 45l-8 5" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <line x1="85" y1="45" x2="155" y2="45" stroke="var(--accent)" strokeWidth="1" strokeDasharray="4 2" opacity="0.4"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Whip Pan Transition' && (
+                                    <>
+                                      <rect x="65" y="24" width="50" height="42" rx="3" fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.2"/>
+                                      <rect x="95" y="24" width="50" height="42" rx="3" fill="none" stroke="var(--accent)" strokeWidth="1" opacity="0.4"/>
+                                      <rect x="125" y="24" width="50" height="42" rx="3" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M30 45h65" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" opacity="0.8"/>
+                                      <path d="M30 45l10-6M30 45l10 6" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                                      <line x1="110" y1="35" x2="160" y2="35" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="15 5" opacity="0.6"/>
+                                      <line x1="100" y1="55" x2="155" y2="55" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="8 8" opacity="0.6"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Camera Tilt' && (
+                                    <>
+                                      <rect x="85" y="22" width="70" height="46" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M120 78V68M120 78l-4-6M120 78l4-6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
+                                      <path d="M120 12V22M120 12l-4 6M120 12l4 6" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
+                                      <path d="M85 32c5-10 65-10 70 0" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 2" opacity="0.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Cinematic Parallax Push' && (
+                                    <>
+                                      <line x1="20" y1="15" x2="70" y2="32" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+                                      <line x1="220" y1="15" x2="170" y2="32" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+                                      <line x1="20" y1="75" x2="70" y2="58" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+                                      <line x1="220" y1="75" x2="170" y2="58" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5"/>
+                                      <rect x="40" y="18" width="160" height="54" rx="4" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="4 2"/>
+                                      <rect x="85" y="28" width="70" height="34" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M50 25l25 6M190 25l-25 6M50 65l25-6M190 65l-25-6" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <polygon points="75,31 67,27 72,33" fill="var(--accent)"/>
+                                      <polygon points="165,31 173,27 168,33" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Cinematic Pull-Out' && (
+                                    <>
+                                      <line x1="85" y1="28" x2="40" y2="18" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <line x1="155" y1="28" x2="200" y2="18" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <rect x="85" y="28" width="70" height="34" rx="2" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="2 2"/>
+                                      <rect x="40" y="18" width="160" height="54" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M78 30L52 24M162 30l26-6" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <polygon points="52,24 60,28 55,22" fill="var(--accent)"/>
+                                      <polygon points="188,24 180,28 185,22" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Slow Lens Zoom' && (
+                                    <>
+                                      <rect x="40" y="18" width="160" height="54" rx="4" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <rect x="65" y="26" width="110" height="38" rx="3" fill="none" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6"/>
+                                      <rect x="90" y="33" width="60" height="24" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M96 37h-4v4M144 37h4v4M96 53h-4v-4M144 53h4v-4" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Fast Crash Zoom' && (
+                                    <>
+                                      <rect x="95" y="32" width="50" height="26" rx="2" fill="none" stroke="var(--accent)" strokeWidth="3"/>
+                                      <path d="M25 15l50 12M215 15l-50 12M25 75l50-12M215 75l-50-12" stroke="var(--accent)" strokeWidth="2.5" strokeLinecap="round"/>
+                                      <polygon points="75,27 65,24 70,30" fill="var(--accent)"/>
+                                      <polygon points="165,27 175,24 170,30" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Dolly Zoom Effect' && (
+                                    <>
+                                      <rect x="95" y="24" width="50" height="42" rx="3" fill="none" stroke="var(--accent)" strokeWidth="3" style={{ zIndex: 3 }}/>
+                                      <rect x="40" y="12" width="160" height="66" rx="4" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <rect x="65" y="18" width="110" height="54" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <path d="M45 45l20-8M45 45l20 8M45 45h30" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <path d="M195 45l-20-8M195 45l-20 8M195 45h-30" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Camera Roll' && (
+                                    <>
+                                      <g transform="rotate(18, 120, 45)">
+                                        <rect x="70" y="20" width="100" height="50" rx="4" fill="none" stroke="var(--accent)" strokeWidth="3.5"/>
+                                        <line x1="70" y1="45" x2="170" y2="45" stroke="var(--accent)" strokeWidth="1" opacity="0.4"/>
+                                      </g>
+                                      <path d="M40 25c-5 10-5 30 0 40M200 65c5-10 5-30 0-40" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
+                                      <path d="M40 25l-4 6M40 25l6 2M200 65l4-6M200 65l-6-2" stroke="var(--accent)" strokeWidth="2" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Tracking Shot' && (
+                                    <>
+                                      <circle cx="50" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="14" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <circle cx="190" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <path d="M30 45h160" stroke="var(--accent)" strokeWidth="2" strokeDasharray="5 3"/>
+                                      <polygon points="190,45 180,41 180,49" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Trucking Shot' && (
+                                    <>
+                                      <line x1="30" y1="65" x2="210" y2="65" stroke="rgba(255,255,255,0.15)" strokeWidth="2"/>
+                                      <line x1="30" y1="70" x2="210" y2="70" stroke="rgba(255,255,255,0.15)" strokeWidth="2"/>
+                                      <rect x="45" y="30" width="30" height="24" rx="2" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                      <rect x="135" y="30" width="30" height="24" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M80 42h50" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 2"/>
+                                      <polygon points="130,42 122,39 122,45" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Horizontal Arc Shot' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="12" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
+                                      <path d="M50 45c0-30 140-30 140 0" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 2"/>
+                                      <path d="M190 45c0 10-10 20-30 25" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round"/>
+                                      <polygon points="190,45 185,53 195,51" fill="var(--accent)"/>
+                                      <rect x="105" y="62" width="30" height="16" rx="2" fill="none" stroke="var(--accent)" strokeWidth="1.5" transform="rotate(-15, 120, 70)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Boom Crane Shot' && (
+                                    <>
+                                      <line x1="40" y1="65" x2="160" y2="35" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round"/>
+                                      <circle cx="40" cy="65" r="6" fill="var(--accent)"/>
+                                      <rect x="160" y="20" width="26" height="20" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M200 20v45M200 20l-4 8M200 20l4 8M200 65l-4-8M200 65l4-8" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Handheld Gritty Tracking' && (
+                                    <>
+                                      <rect x="75" y="24" width="90" height="42" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M30 35l25 15-10-25 35 15M210 55l-20-15 15 25-30-20" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeLinecap="round"/>
+                                      <path d="M70 15l5 5-3 3M170 65l-5 5 3 3" stroke="var(--accent)" strokeWidth="1.5" strokeLinecap="round"/>
+                                    </>
+                                  )}
+
+                                  {/* ── COMPOSITIONS ── */}
+                                  {item.en === 'Rule of Thirds' && (
+                                    <>
+                                      <line x1="85" y1="10" x2="85" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <line x1="155" y1="10" x2="155" y2="80" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <line x1="15" y1="33" x2="225" y2="33" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <line x1="15" y1="56" x2="225" y2="56" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <circle cx="85" cy="33" r="5" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <circle cx="155" cy="56" r="5" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <rect x="70" y="20" width="30" height="48" rx="3" fill="rgba(212, 160, 32, 0.08)" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Symmetric Composition' && (
+                                    <>
+                                      <line x1="120" y1="10" x2="120" y2="80" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="4 2"/>
+                                      <circle cx="120" cy="38" r="12" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M102 65c0-8 8-12 18-12s18 4 18 12v5h-36z" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M40 25h15v40H40z" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <path d="M185 25h15v40H185z" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <path d="M70 45h15M170 45h-15" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <polygon points="85,45 79,41 79,49" fill="var(--accent)"/>
+                                      <polygon points="155,45 161,41 161,49" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {(item.en === 'Three-Layer Depth (FG/MG/BG)' || item.en === 'Three-Layer Depth') && (
+                                    <>
+                                      <path d="M25 55l20-10 30 15 45-20 40 25 30-10 25 15" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" fill="none"/>
+                                      <circle cx="120" cy="48" r="9" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M107 68c0-5 6-8 13-8s13 3 13 8" stroke="var(--accent)" strokeWidth="2" fill="none"/>
+                                      <path d="M15 15c20 10 30 30 15 55" stroke="rgba(255,255,255,0.25)" strokeWidth="5" fill="none" strokeLinecap="round" opacity="0.6"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Eye Level Shot' && (
+                                    <>
+                                      <circle cx="170" cy="35" r="9" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M156 62c0-7 6-10 14-10s14 3 14 10" stroke="var(--accent)" strokeWidth="2" fill="none"/>
+                                      <rect x="45" y="30" width="22" height="14" rx="2" fill="none" stroke="rgba(255,255,255,0.35)" strokeWidth="2"/>
+                                      <circle cx="67" cy="37" r="3" fill="rgba(255,255,255,0.35)"/>
+                                      <path d="M56 44l-8 25M56 44l8 25" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                      <line x1="75" y1="37" x2="155" y2="37" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 3"/>
+                                      <circle cx="120" cy="37" r="3" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Low Angle Shot' && (
+                                    <>
+                                      <line x1="40" y1="75" x2="100" y2="20" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <line x1="200" y1="75" x2="140" y2="20" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <circle cx="120" cy="28" r="11" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M92 78c4-20 13-28 28-28s24 8 28 28" stroke="var(--accent)" strokeWidth="2.5" fill="none"/>
+                                      <path d="M40 60l15-15M55 45v8M55 45H47" stroke="var(--accent)" strokeWidth="2" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {item.en === "Bird's Eye View" && (
+                                    <>
+                                      <circle cx="120" cy="38" r="9" fill="rgba(212, 160, 32, 0.15)" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M96 46c0-7 9-11 24-11s24 4 24 11v5H96z" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="40" y1="20" x2="200" y2="20" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                                      <line x1="40" y1="40" x2="200" y2="40" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                                      <line x1="40" y1="60" x2="200" y2="60" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                                      <line x1="80" y1="10" x2="80" y2="80" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                                      <line x1="160" y1="10" x2="160" y2="80" stroke="rgba(255,255,255,0.08)" strokeWidth="1"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Leading Lines' && (
+                                    <>
+                                      <line x1="20" y1="15" x2="110" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="20" y1="75" x2="110" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="220" y1="15" x2="130" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="220" y1="75" x2="130" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="60" y1="28" x2="60" y2="62" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                                      <line x1="180" y1="28" x2="180" y2="62" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                                      <circle cx="120" cy="45" r="5" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M113 58c0-3 3-4 7-4s7 1 7 4" stroke="var(--accent)" strokeWidth="1.5" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Negative Space' && (
+                                    <>
+                                      <circle cx="185" cy="58" r="5" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M178 72c0-3 3-4 7-4s7 1 7 4" stroke="var(--accent)" strokeWidth="1.5" fill="none"/>
+                                      <path d="M30 25h80M30 40h40" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <rect x="25" y="18" width="120" height="44" rx="3" fill="rgba(255,255,255,0.01)" stroke="rgba(255,255,255,0.03)" strokeWidth="1"/>
+                                      <path d="M125 35c15 0 35 10 42 16" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <polygon points="172,53 170,45 165,50" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Scale Dominance' && (
+                                    <>
+                                      <polygon points="120,12 210,75 30,75" fill="none" stroke="rgba(255,255,255,0.12)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="70" r="3" fill="var(--accent)"/>
+                                      <path d="M116 78c0-2 2-3 4-3s4 1 4 3" stroke="var(--accent)" strokeWidth="1.5" fill="none"/>
+                                      <path d="M80 35v30M160 35v30" stroke="var(--accent)" strokeWidth="1.2"/>
+                                      <path d="M80 35l-3 6M80 65l-3-6M160 35l3 6M160 65l3-6" stroke="var(--accent)" strokeWidth="1.2"/>
+                                    </>
+                                  )}
+
+                                  {/* ── LENSES ── */}
+                                  {item.en === 'Anamorphic' && (
+                                    <>
+                                      <ellipse cx="80" cy="45" rx="8" ry="14" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <ellipse cx="160" cy="45" rx="8" ry="14" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6"/>
+                                      <ellipse cx="120" cy="45" rx="14" ry="22" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <line x1="20" y1="45" x2="220" y2="45" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <line x1="20" y1="45" x2="220" y2="45" stroke="#fff" strokeWidth="0.5" opacity="0.8"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Spherical Prime' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="22" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <circle cx="120" cy="45" r="13" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="6" fill="var(--accent)"/>
+                                      <line x1="50" y1="45" x2="190" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Fisheye' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="30" stroke="var(--accent)" strokeWidth="2"/>
+                                      <ellipse cx="120" cy="45" rx="18" ry="30" stroke="rgba(212, 160, 32, 0.5)" strokeWidth="1.5"/>
+                                      <ellipse cx="120" cy="45" rx="30" ry="12" stroke="rgba(212, 160, 32, 0.5)" strokeWidth="1.5"/>
+                                      <path d="M95 28c15-4 35-4 50 0M95 62c15 4 35 4 50 0" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Macro' && (
+                                    <>
+                                      <circle cx="100" cy="40" r="16" stroke="var(--accent)" strokeWidth="2" fill="rgba(212, 160, 32, 0.1)"/>
+                                      <line x1="112" y1="52" x2="135" y2="75" stroke="var(--accent)" strokeWidth="3" strokeLinecap="round"/>
+                                      <path d="M92 40h16M100 32v16" stroke="var(--accent)" strokeWidth="1.2"/>
+                                      <path d="M150 25c10 5 35 25 45 40" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Tilt-Shift' && (
+                                    <>
+                                      <line x1="20" y1="28" x2="220" y2="28" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <line x1="20" y1="62" x2="220" y2="62" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <rect x="20" y="32" width="200" height="26" fill="rgba(212,160,32,0.12)" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="4" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Vintage Helios 44-2' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="7" fill="var(--accent)"/>
+                                      <path d="M120 45c20-25 50 10 35 25s-50 10-50-15s35-35 45-10" stroke="var(--accent)" strokeWidth="1.5" fill="none" strokeLinecap="round"/>
+                                      <path d="M120 45c-20 25-50-10-35-25s50-10 50 15s-35 35-45 10" stroke="var(--accent)" strokeWidth="1" opacity="0.5" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {/* ── FOCAL LENGTHS ── */}
+                                  {item.en === 'Extreme Wide' && (
+                                    <>
+                                      {/* Camera body icon at bottom */}
+                                      <rect x="105" y="70" width="30" height="12" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                                      <rect x="114" y="66" width="12" height="4" fill="var(--accent)"/>
+                                      {/* Extreme wide projection cone (114 degrees) */}
+                                      <path d="M120 70L25 22M120 70L215 22" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M40 25c40-10 120-10 160 0" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      {/* Visualizing wide distortion */}
+                                      <path d="M60 40c30-8 90-8 120 0" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                                      <circle cx="120" cy="22" r="3" fill="var(--accent)"/>
+                                      <text x="120" y="52" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">114° (Ultra Wide)</text>
+                                    </>
+                                  )}
+ 
+                                  {item.en === 'Wide Angle' && (
+                                    <>
+                                      {/* Camera body icon at bottom */}
+                                      <rect x="105" y="70" width="30" height="12" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                                      <rect x="114" y="66" width="12" height="4" fill="var(--accent)"/>
+                                      {/* Wide angle projection cone (84 degrees) */}
+                                      <path d="M120 70L55 20M120 70L185 20" stroke="var(--accent)" strokeWidth="2.2"/>
+                                      <path d="M65 22c25-5 85-5 110 0" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <circle cx="120" cy="22" r="3" fill="var(--accent)"/>
+                                      <text x="120" y="52" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">84° (Wide)</text>
+                                    </>
+                                  )}
+ 
+                                  {item.en === '50mm Normal' && (
+                                    <>
+                                      {/* Camera body icon at bottom */}
+                                      <rect x="105" y="70" width="30" height="12" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                                      <rect x="114" y="66" width="12" height="4" fill="var(--accent)"/>
+                                      {/* Normal perspective cone (46 degrees - human eye) */}
+                                      <path d="M120 70L85 18M120 70L155 18" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M90 20c15-3 45-3 60 0" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <circle cx="120" cy="20" r="3.5" fill="var(--accent)"/>
+                                      <text x="120" y="52" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">46° (Human Eye)</text>
+                                    </>
+                                  )}
+ 
+                                  {item.en === 'Portrait 85mm' && (
+                                    <>
+                                      {/* Camera body icon at bottom */}
+                                      <rect x="105" y="70" width="30" height="12" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1"/>
+                                      <rect x="114" y="66" width="12" height="4" fill="var(--accent)"/>
+                                      {/* Portrait compression cone (28 degrees) */}
+                                      <path d="M120 70L98 15M120 70L142 15" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="98" y1="15" x2="142" y2="15" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <circle cx="120" cy="18" r="4.5" fill="var(--accent)"/>
+                                      <text x="120" y="52" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">28° (Portrait)</text>
+                                    </>
+                                  )}
+ 
+                                  {item.en === '135mm Telephoto' && (
+                                    <>
+                                      <line x1="105" y1="20" x2="105" y2="80" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="135" y1="20" x2="135" y2="80" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="85" y1="45" x2="155" y2="45" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <circle cx="120" cy="45" r="4" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {/* ── APERTURES ── */}
+                                  {item.en === 'f/1.2' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="28" stroke="var(--accent)" strokeWidth="2"/>
+                                      <circle cx="120" cy="45" r="24" fill="rgba(212,160,32,0.15)" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="2 2"/>
+                                      {/* Wide open iris blades representation */}
+                                      <path d="M100 25l10-5M140 25l-10-5M100 65l10 5M140 65l-10 5" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'f/1.4' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="28" stroke="var(--accent)" strokeWidth="2"/>
+                                      <circle cx="120" cy="45" r="20" fill="rgba(212,160,32,0.08)" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'f/2.8' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="28" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
+                                      <circle cx="120" cy="45" r="14" stroke="var(--accent)" strokeWidth="2.5" fill="rgba(212,160,32,0.05)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'f/8 Deep Focus' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="28" stroke="rgba(255,255,255,0.2)" strokeWidth="2"/>
+                                      <circle cx="120" cy="45" r="4" stroke="var(--accent)" strokeWidth="3" fill="var(--accent)"/>
+                                      <path d="M120 15v10M120 65v10M90 45h10M140 45h10" stroke="var(--accent)" strokeWidth="1.5"/>
+                                    </>
+                                  )}
+
+                                  {/* ── DEPTH OF FIELD ── */}
+                                  {item.en === 'Deep Focus / Infinite Depth' && (
+                                    <>
+                                      <circle cx="60" cy="45" r="5" fill="var(--accent)"/>
+                                      <circle cx="120" cy="45" r="5" fill="var(--accent)"/>
+                                      <circle cx="180" cy="45" r="5" fill="var(--accent)"/>
+                                      <line x1="30" y1="45" x2="210" y2="45" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <rect x="25" y="15" width="190" height="60" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Razor-Thin DOF / Extreme Bokeh' && (
+                                    <>
+                                      <line x1="120" y1="15" x2="120" y2="75" stroke="var(--accent)" strokeWidth="3"/>
+                                      <circle cx="120" cy="45" r="8" fill="var(--accent)"/>
+                                      <circle cx="60" cy="30" r="12" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="2 2"/>
+                                      <circle cx="180" cy="60" r="16" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="2 2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Split Diopter Effect' && (
+                                    <>
+                                      <line x1="120" y1="10" x2="120" y2="80" stroke="var(--accent)" strokeWidth="2"/>
+                                      {/* Left side: Near Object */}
+                                      <circle cx="70" cy="35" r="12" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      {/* Right side: Far Object */}
+                                      <circle cx="170" cy="55" r="6" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Rack Focus / Focus Pull Simulation' && (
+                                    <>
+                                      <circle cx="70" cy="45" r="9" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" strokeDasharray="3 3"/>
+                                      <circle cx="170" cy="45" r="9" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M90 45h60" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 2"/>
+                                      <polygon points="150,45 142,41 142,49" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {/* ── SHOT SIZES ── */}
+                                  {item.en === 'Extreme Close-Up' && (
+                                    <>
+                                      <ellipse cx="120" cy="45" rx="35" ry="18" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <circle cx="120" cy="45" r="12" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="5" fill="var(--accent)"/>
+                                      <path d="M50 20h20v-5H50zM170 20h20v-5h-20zM50 70h20v5H50zM170 70h20v5h-20z" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Close-Up' && (
+                                    <>
+                                      <circle cx="120" cy="32" r="12" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M95 65c0-10 10-15 25-15s25 5 25 15v8H95z" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="70" y="15" width="100" height="60" rx="4" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="4 2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Medium Shot' && (
+                                    <>
+                                      <circle cx="120" cy="28" r="9" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M102 55c0-8 8-12 18-12s18 4 18 12v20H102z" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <rect x="55" y="15" width="130" height="60" rx="4" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="4 2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Wide Shot' && (
+                                    <>
+                                      <circle cx="120" cy="24" r="7" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M106 45c0-6 6-9 14-9s14 3 14 9v24h-28z" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="112" y1="69" x2="112" y2="78" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="128" y1="69" x2="128" y2="78" stroke="var(--accent)" strokeWidth="2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Establishing Wide' && (
+                                    <>
+                                      <path d="M25 65l30-20 40 25 50-30 45 25 25-10" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
+                                      <polygon points="130,55 140,65 120,65" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <circle cx="120" cy="25" r="4" fill="none" stroke="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Low Angle' && (
+                                    <>
+                                      <line x1="40" y1="75" x2="100" y2="20" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <line x1="200" y1="75" x2="140" y2="20" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <circle cx="120" cy="28" r="11" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <path d="M92 78c4-20 13-28 28-28s24 8 28 28" stroke="var(--accent)" strokeWidth="2.5" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Dutch Angle' && (
+                                    <>
+                                      <g transform="rotate(-12, 120, 45)">
+                                        <rect x="40" y="20" width="160" height="50" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                        <line x1="20" y1="45" x2="220" y2="45" stroke="rgba(255,255,255,0.2)" strokeWidth="1"/>
+                                      </g>
+                                    </>
+                                  )}
+
+                                  {/* ── ASPECT RATIOS ── */}
+                                  {item.en === '2.39:1 Cinemascope' && (
+                                    <>
+                                      <rect x="20" y="24" width="200" height="42" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="25" y="29" width="190" height="32" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                                      <line x1="20" y1="45" x2="220" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                                      <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">2.39:1</text>
+                                    </>
+                                  )}
+
+                                  {item.en === '16:9 Widescreen' && (
+                                    <>
+                                      <rect x="35" y="20" width="170" height="50" rx="3" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="40" y="25" width="160" height="40" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                                      <line x1="35" y1="45" x2="205" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1"/>
+                                      <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">16:9</text>
+                                    </>
+                                  )}
+
+                                  {item.en === '4:3 Academy Format' && (
+                                    <>
+                                      <rect x="60" y="16" width="120" height="58" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="65" y="21" width="110" height="48" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                                      <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">4:3</text>
+                                    </>
+                                  )}
+
+                                  {item.en === '1:1 Square' && (
+                                    <>
+                                      <rect x="85" y="15" width="70" height="60" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="90" y="20" width="60" height="50" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                                      <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">1:1</text>
+                                    </>
+                                  )}
+
+                                  {item.en === '9:16 Vertical' && (
+                                    <>
+                                      <rect x="98" y="12" width="44" height="66" rx="5" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <rect x="103" y="17" width="34" height="56" rx="2" fill="none" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5"/>
+                                      <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle" opacity="0.8">9:16</text>
+                                    </>
+                                  )}
+
+                                  {/* ── SUBJECT SCALES ── */}
+                                  {item.en === 'Immense Scale' && (
+                                    <>
+                                      <rect x="30" y="15" width="180" height="60" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <circle cx="120" cy="65" r="3" fill="var(--accent)"/>
+                                      <path d="M80 20C120 5 120 5 160 20" stroke="var(--accent)" strokeWidth="1.5" fill="none"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Extreme Close-up / Macro' && (
+                                    <>
+                                      <circle cx="120" cy="45" r="28" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <circle cx="120" cy="45" r="12" fill="none" stroke="var(--accent)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="5" fill="var(--accent)"/>
+                                      <path d="M80 45h80M120 10v70" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Claustrophobic Scale' && (
+                                    <>
+                                      <rect x="35" y="18" width="170" height="54" rx="4" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      {/* Boxing elements */}
+                                      <rect x="20" y="10" width="40" height="70" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+                                      <rect x="180" y="10" width="40" height="70" fill="rgba(255,255,255,0.1)" stroke="rgba(255,255,255,0.2)"/>
+                                      <circle cx="120" cy="45" r="8" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Heroic Dominance / Low Angle' && (
+                                    <>
+                                      <path d="M50 78L120 22L190 78" stroke="var(--accent)" strokeWidth="2.5"/>
+                                      <circle cx="120" cy="30" r="10" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
+                                    </>
+                                  )}
+
+                                  {/* ── ADVANCED FRAMINGS ── */}
+                                  {item.en === 'Multi-Layered Peripheral Framing' && (
+                                    <>
+                                      <path d="M30 15h180v60H30z" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      <path d="M15 10c40 10 40 40 40 70M225 10c-40 10-40 40-40 70" stroke="var(--accent)" strokeWidth="3" fill="none"/>
+                                      <circle cx="120" cy="45" r="8" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Leading Lines Framing' && (
+                                    <>
+                                      <line x1="20" y1="15" x2="110" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="20" y1="75" x2="110" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="220" y1="15" x2="130" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <line x1="220" y1="75" x2="130" y2="45" stroke="var(--accent)" strokeWidth="2"/>
+                                      <circle cx="120" cy="45" r="5" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Chiaroscuro Shadow Framing' && (
+                                    <>
+                                      <rect x="20" y="12" width="200" height="66" rx="4" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1"/>
+                                      {/* Shadows */}
+                                      <path d="M20 12h80v66H20zM140 12h80v66H140z" fill="rgba(0,0,0,0.6)" stroke="rgba(212,160,32,0.3)" strokeWidth="1.5"/>
+                                      <circle cx="120" cy="45" r="9" fill="var(--accent)"/>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Voyeuristic Over-the-Shoulder' && (
+                                    <>
+                                      {/* Blurred shoulder foreground */}
+                                      <path d="M15 80c10-25 35-35 50-35s25 5 25 35" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="4" opacity="0.6"/>
+                                      {/* Targeted Subject */}
+                                      <circle cx="160" cy="38" r="9" fill="none" stroke="var(--accent)" strokeWidth="2"/>
+                                      <path d="M146 65c0-6 6-9 14-9s14 3 14 9" stroke="var(--accent)" strokeWidth="2" fill="none"/>
+                                    </>
+                                  )}
+                                </svg>
+                              </div>
+                            )}
+
                            <p className="opt-desc">
                              {isConf ? (
                                <span style={{ color: '#ff6b6b', fontWeight: 'bold' }}>{conflictCheck.reason}</span>
@@ -955,18 +1688,44 @@ export default function EnginePage() {
                 <span className="view-title-text">{l === 'ar' ? 'المشاريع المحفوظة' : 'Saved Projects'}</span>
               </div>
 
-              {engine.history.length > 0 && (
-                <button className="hist-btn danger" onClick={() => { engine.clearHistory(); flash(l === 'ar' ? 'تم مسح جميع المشاريع' : 'All projects cleared'); }}>
-                  {getIcon('trash')}
-                  <span>{tUI('clearAll')}</span>
-                </button>
-              )}
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                {/* Import Button */}
+                <label className="hist-btn" style={{ cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', fontSize: '0.78rem' }}>
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <span>{l === 'ar' ? 'استيراد' : 'Import'}</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    onChange={handleImport}
+                  />
+                </label>
+
+                {engine.history.length > 0 && (
+                  <button className="hist-btn danger" onClick={() => { engine.clearHistory(); flash(l === 'ar' ? 'تم مسح جميع المشاريع' : 'All projects cleared'); }}>
+                    {getIcon('trash')}
+                    <span>{tUI('clearAll')}</span>
+                  </button>
+                )}
+              </div>
             </div>
 
             {engine.history.length === 0 ? (
-              <div style={{ textAlign: 'center', padding: '60px 20px', color: 'var(--text3)' }}>
-                <span style={{ fontSize: '2.5rem', display: 'block', marginBottom: 10 }}>📁</span>
-                {l === 'ar' ? 'لا توجد مشاريع محفوظة بعد' : 'No saved projects yet'}
+              <div style={{ textAlign: 'center', padding: '60px 20px', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '16px' }}>
+                <span style={{ fontSize: '2.5rem' }}>📁</span>
+                <div style={{ color: 'var(--text3)' }}>
+                  {l === 'ar' ? 'لا توجد مشاريع محفوظة بعد' : 'No saved projects yet'}
+                </div>
+                <label className="action-btn primary" style={{ cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', fontSize: '0.85rem', width: 'auto' }}>
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+                  <span>{l === 'ar' ? 'استيراد مشاريع من ملف JSON' : 'Import projects from JSON file'}</span>
+                  <input
+                    type="file"
+                    accept=".json"
+                    style={{ display: 'none' }}
+                    onChange={handleImport}
+                  />
+                </label>
               </div>
             ) : (
               <div className="history-list">
@@ -990,6 +1749,9 @@ export default function EnginePage() {
                     <div className="history-actions">
                       <button className="hist-btn" title={tUI('copy')} onClick={() => copyText(entry.prompt)}>
                         {getIcon('copy')}
+                      </button>
+                      <button className="hist-btn" title={l === 'ar' ? 'تصدير المشروع' : 'Export Project'} onClick={() => exportProject(entry)}>
+                        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
                       </button>
                       <button className="hist-btn" title={tUI('apply')} onClick={() => {
                         engine.applySelections(
@@ -1056,6 +1818,20 @@ export default function EnginePage() {
                           : (engine.isColorLabLinked ? '🎨 Color Lab Linked' : '🎨 Link Color Lab')}
                       </span>
                     </div>
+
+                    <div
+                      className={`color-lab-toggle ${engine.isDepthLinked ? 'active' : ''}`}
+                      onClick={() => engine.setIsDepthLinked(!engine.isDepthLinked)}
+                      style={{ marginRight: '8px' }}
+                    >
+                      <div className="toggle-switch" />
+                      <span>
+                        {l === 'ar'
+                          ? (engine.isDepthLinked ? '🎭 العمق مربوط' : '🎭 ربط العمق')
+                          : (engine.isDepthLinked ? '🎭 Depth Linked' : '🎭 Link Depth')}
+                      </span>
+                    </div>
+
                     {engine.chatMessages.length > 0 && (
                       <button className="clear-chat-btn" onClick={engine.clearChat}>
                         {getIcon('trash')}
@@ -1648,6 +2424,172 @@ export default function EnginePage() {
               </div>
             </div>
           </div>
+
+          {/* 7. DEPTH LAYERS VIEW */}
+          <div className={`view ${engine.activeView === 'depth' ? 'active' : ''}`}>
+            <div className="depth-layers-view">
+              <div className="depth-layers-header">
+                <h2 className="depth-layers-title">
+                  {l === 'ar' ? '🎭 طبقات العمق (ثلاثي الأبعاد)' : '🎭 Three-Layer Depth System'}
+                </h2>
+                <p className="depth-layers-description">
+                  {l === 'ar' 
+                    ? 'تحكم بتوزيع التركيز البصري والوضوح ببرمجة دقيقة لطبقات الكادر الثلاث (المقدمة والوسط والخلفية) مع تحديد تفاصيل وكثافة كل طبقة.' 
+                    : 'Control visual focus and clarity distribution across the three frame planes (Foreground, Midground, and Background) with density and description controls.'}
+                </p>
+              </div>
+
+              {/* Presets */}
+              <div className="depth-presets-section">
+                <div className="depth-presets-label">
+                  🎬 {l === 'ar' ? 'توزيعات عمق سينمائية جاهزة' : 'Cinematic Depth Presets'}
+                </div>
+                <div className="depth-preset-bar">
+                  {engine.depthPresets?.map((p) => (
+                    <button
+                      key={p.id}
+                      className={`depth-preset-btn ${engine.activeDepthPreset === p.id ? 'active' : ''}`}
+                      onClick={() => engine.applyDepthPreset(p.id)}
+                    >
+                      <span className="depth-preset-icon">{p.icon}</span>
+                      <span>{l === 'ar' ? p.ar : p.en}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Layer Cards */}
+              {(['foreground', 'midground', 'background'] as const).map((layerKey) => {
+                const layer = engine.depthLayering[layerKey];
+                const title = layerKey === 'foreground' 
+                  ? (l === 'ar' ? 'المقدمة (Foreground)' : 'Foreground')
+                  : layerKey === 'midground'
+                  ? (l === 'ar' ? 'المنتصف (Midground)' : 'Midground')
+                  : (l === 'ar' ? 'الخلفية (Background)' : 'Background');
+                
+                const icon = layerKey === 'foreground' ? '🌿' : layerKey === 'midground' ? '👤' : '🌄';
+                const placeholder = layerKey === 'foreground'
+                  ? (l === 'ar' ? 'مثال: أوراق شجر قريبة، قطرات مطر على نافذة، سياج...' : 'e.g., close leaves, raindrops on glass, window frame...')
+                  : layerKey === 'midground'
+                  ? (l === 'ar' ? 'مثال: البطل يتحدث بالهاتف، سيارة متوقفة...' : 'e.g., main character talking on phone, car parked...')
+                  : (l === 'ar' ? 'مثال: جبال مغطاة بالضباب، أضواء نيون بعيدة للمدينة...' : 'e.g., misty mountains, distant neon city skyline...');
+
+                return (
+                  <div className="depth-layer-card" key={layerKey}>
+                    <div className="depth-layer-header">
+                      <span className="depth-layer-icon">{icon}</span>
+                      <span className="depth-layer-name">{title}</span>
+                      <span className="depth-layer-value">{layer.focus}%</span>
+                    </div>
+
+                    {/* Focus Slider */}
+                    <div className="depth-slider-row">
+                      <input
+                        type="range"
+                        min="0"
+                        max="100"
+                        value={layer.focus}
+                        onChange={(e) => engine.setDepthFocus(layerKey, parseInt(e.target.value))}
+                        className="depth-slider-input"
+                        style={{
+                          background: l === 'ar'
+                            ? `linear-gradient(to left, var(--accent) 0%, var(--accent) ${layer.focus}%, rgba(255,255,255,0.08) ${layer.focus}%, rgba(255,255,255,0.08) 100%)`
+                            : `linear-gradient(to right, var(--accent) 0%, var(--accent) ${layer.focus}%, rgba(255,255,255,0.08) ${layer.focus}%, rgba(255,255,255,0.08) 100%)`
+                        }}
+                      />
+                    </div>
+
+                    {/* Density Buttons */}
+                    <div className="depth-density-row">
+                      <span className="depth-density-label">{l === 'ar' ? 'كثافة العناصر:' : 'Density:'}</span>
+                      <div className="depth-density-btns">
+                        {(['minimal', 'sparse', 'moderate', 'dense', 'packed'] as const).map((d) => {
+                          const dLabel = d === 'minimal' ? (l === 'ar' ? 'خفيف جداً' : 'Minimal')
+                            : d === 'sparse' ? (l === 'ar' ? 'خفيف' : 'Sparse')
+                            : d === 'moderate' ? (l === 'ar' ? 'متوسط' : 'Moderate')
+                            : d === 'dense' ? (l === 'ar' ? 'كثيف' : 'Dense')
+                            : (l === 'ar' ? 'مزدحم جداً' : 'Packed');
+                          return (
+                            <button
+                              key={d}
+                              className={`depth-density-btn ${layer.density === d ? 'active' : ''}`}
+                              onClick={() => engine.setDepthDensity(layerKey, d)}
+                            >
+                              {dLabel}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    </div>
+
+                    {/* Description Text area */}
+                    <div className="depth-desc-row">
+                      <textarea
+                        className="depth-desc-input"
+                        placeholder={placeholder}
+                        value={layer.description}
+                        onChange={(e) => engine.setDepthDescription(layerKey, e.target.value)}
+                        rows={2}
+                      />
+                    </div>
+                  </div>
+                );
+              })}
+
+              {/* Horizontal Graphical Preview */}
+              <div className="depth-preview-section">
+                <div className="depth-preview-label">
+                  📊 {l === 'ar' ? 'مخطط التوزيع الهندسي للعمق' : 'Geometric Depth Distribution Chart'}
+                </div>
+                <div className="depth-preview-bars">
+                  {(['foreground', 'midground', 'background'] as const).map((key) => {
+                    const pct = engine.depthLayering[key].focus;
+                    const color = key === 'foreground' ? '#ff9f43' : key === 'midground' ? 'var(--accent)' : '#54a0ff';
+                    const label = key === 'foreground' ? 'FG' : key === 'midground' ? 'MG' : 'BG';
+                    return (
+                      <div className="depth-preview-row" key={key}>
+                        <span className="depth-preview-key">{label}</span>
+                        <div className="depth-preview-track">
+                          <div
+                            className="depth-preview-fill"
+                            style={{
+                              width: `${pct}%`,
+                              backgroundColor: color
+                            }}
+                          />
+                        </div>
+                        <span className="depth-preview-pct">{pct}%</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Prompt Output Preview */}
+              <div className="depth-prompt-preview-box">
+                <span className="depth-prompt-preview-title">
+                  📝 {l === 'ar' ? 'موجه العمق المضاف للبرومت' : 'Generated Depth prompt segment'}
+                </span>
+                <div className="depth-prompt-preview-text">
+                  {engine.depthPrompt ? (
+                    engine.depthPrompt
+                  ) : (
+                    <span className="depth-prompt-preview-empty">
+                      {l === 'ar' ? 'عدل قيم السلايدرات لإنتاج برومت العمق...' : 'Adjust sliders to generate depth prompt...'}
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* Reset Action */}
+              <div className="depth-actions">
+                <button className="depth-reset-btn" onClick={engine.resetDepthLayering}>
+                  {getIcon('trash')}
+                  <span>{l === 'ar' ? 'إعادة ضبط طبقات العمق' : 'Reset Depth Layers'}</span>
+                </button>
+              </div>
+            </div>
+          </div>
         </main>
 
         {/* ── RIGHT: PROMPT PANEL ── */}
@@ -1735,6 +2677,12 @@ export default function EnginePage() {
           onClick={() => { setMobileView('main'); engine.setActiveView('colorlab'); }}>
           {getIcon('palette')}
           <span>{tUI('colorLab')}</span>
+        </button>
+
+        <button className={`mob-nav-btn ${(mobileView === 'main' && engine.activeView === 'depth') ? 'active' : ''}`}
+          onClick={() => { setMobileView('main'); engine.setActiveView('depth'); }}>
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+          <span>{l === 'ar' ? 'العمق' : 'Depth'}</span>
         </button>
 
         <button className={`mob-nav-btn ${(mobileView === 'main' && engine.activeView === 'assistant') ? 'active' : ''}`}

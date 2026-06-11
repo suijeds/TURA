@@ -3782,3 +3782,453 @@ body.light .api-key-input {
     max-width: 92%;
   }
 }
+
+
+/* ═══════════════════════════════════════ */
+/* DEPTH LAYERING SYSTEM                  */
+/* ═══════════════════════════════════════ */
+
+.depth-layers-view {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  padding: 24px;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.depth-layers-header {
+  text-align: center;
+  margin-bottom: 4px;
+}
+
+.depth-layers-title {
+  font-size: 1.3rem;
+  font-weight: 800;
+  color: var(--accent);
+  margin: 0 0 8px;
+}
+
+.depth-layers-description {
+  font-size: 0.82rem;
+  color: var(--text3);
+  line-height: 1.5;
+  margin: 0;
+}
+
+/* ── Presets Section ── */
+.depth-presets-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.depth-presets-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 12px;
+}
+
+.depth-preset-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.depth-preset-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text3);
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  white-space: nowrap;
+}
+
+.depth-preset-btn:hover {
+  border-color: rgba(212, 160, 32, 0.3);
+  color: var(--text2);
+  background: rgba(212, 160, 32, 0.06);
+}
+
+.depth-preset-btn.active {
+  border-color: var(--accent);
+  background: rgba(212, 160, 32, 0.12);
+  color: var(--accent);
+  box-shadow: 0 0 12px rgba(212, 160, 32, 0.1);
+}
+
+.depth-preset-icon {
+  font-size: 1rem;
+  line-height: 1;
+}
+
+/* ── Layer Card ── */
+.depth-layer-card {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 18px 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+}
+
+.depth-layer-card:hover {
+  border-color: rgba(255, 255, 255, 0.12);
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+}
+
+.depth-layer-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.depth-layer-icon {
+  font-size: 1.2rem;
+  line-height: 1;
+}
+
+.depth-layer-name {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--text1);
+  flex: 1;
+}
+
+.depth-layer-value {
+  font-size: 1.1rem;
+  font-weight: 800;
+  font-variant-numeric: tabular-nums;
+  min-width: 48px;
+  text-align: right;
+}
+
+/* ── Focus Slider ── */
+.depth-slider-row {
+  width: 100%;
+}
+
+.depth-slider-input {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 100%;
+  height: 8px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+  background: rgba(255, 255, 255, 0.08);
+  transition: opacity 0.2s;
+}
+
+.depth-slider-input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+  transition: transform 0.15s ease;
+}
+
+.depth-slider-input::-webkit-slider-thumb:hover {
+  transform: scale(1.15);
+}
+
+.depth-slider-input::-moz-range-thumb {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  border: 3px solid var(--accent);
+  cursor: pointer;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+/* ── Density Buttons ── */
+.depth-density-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.depth-density-label {
+  font-size: 0.78rem;
+  color: var(--text4);
+  font-weight: 600;
+  white-space: nowrap;
+  min-width: 55px;
+}
+
+.depth-density-btns {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.depth-density-btn {
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text4);
+  font-size: 0.72rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.depth-density-btn:hover {
+  border-color: rgba(255, 255, 255, 0.15);
+  color: var(--text2);
+}
+
+.depth-density-btn.active {
+  border-color: var(--accent);
+  background: rgba(212, 160, 32, 0.12);
+  color: var(--accent);
+}
+
+/* ── Description ── */
+.depth-desc-row {
+  width: 100%;
+}
+
+.depth-desc-input {
+  width: 100%;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text2);
+  font-size: 0.8rem;
+  font-family: inherit;
+  resize: vertical;
+  min-height: 44px;
+  transition: border-color 0.2s ease;
+  outline: none;
+}
+
+.depth-desc-input::placeholder {
+  color: var(--text4);
+}
+
+.depth-desc-input:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 2px rgba(212, 160, 32, 0.1);
+}
+
+/* ── Preview ── */
+.depth-preview-section {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.depth-preview-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--text2);
+  margin-bottom: 12px;
+}
+
+.depth-preview-bars {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.depth-preview-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.depth-preview-key {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text3);
+  min-width: 24px;
+  font-family: var(--font-en);
+}
+
+.depth-preview-track {
+  flex: 1;
+  height: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border-radius: 6px;
+  overflow: hidden;
+}
+
+.depth-preview-fill {
+  height: 100%;
+  border-radius: 6px;
+  transition: width 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.depth-preview-pct {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: var(--text3);
+  min-width: 32px;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Depth Prompt Preview ── */
+.depth-prompt-preview-box {
+  background: var(--bg2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 16px;
+}
+
+.depth-prompt-preview-title {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent);
+  display: block;
+  margin-bottom: 8px;
+}
+
+.depth-prompt-preview-text {
+  font-size: 0.78rem;
+  color: var(--text2);
+  line-height: 1.6;
+  font-family: var(--font-en);
+  direction: ltr;
+  text-align: left;
+  word-break: break-word;
+  min-height: 40px;
+}
+
+.depth-prompt-preview-empty {
+  color: var(--text4);
+  font-style: italic;
+}
+
+/* ── Actions ── */
+.depth-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.depth-link-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 24px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text3);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.depth-link-btn:hover {
+  border-color: rgba(212, 160, 32, 0.3);
+  color: var(--text2);
+}
+
+.depth-link-btn.linked {
+  border-color: var(--accent);
+  background: rgba(212, 160, 32, 0.12);
+  color: var(--accent);
+  box-shadow: 0 0 16px rgba(212, 160, 32, 0.1);
+}
+
+.depth-reset-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  border-radius: 20px;
+  border: 1px solid var(--border);
+  background: var(--bg3);
+  color: var(--text4);
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+}
+
+.depth-reset-btn:hover {
+  border-color: rgba(239, 68, 68, 0.3);
+  color: #ff7070;
+  background: rgba(239, 68, 68, 0.06);
+}
+
+/* ── Animations ── */
+@keyframes depthCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.depth-layers-view .depth-layer-card {
+  animation: depthCardIn 0.4s ease forwards;
+}
+
+.depth-layers-view .depth-layer-card:nth-child(3) {
+  animation-delay: 0s;
+}
+.depth-layers-view .depth-layer-card:nth-child(4) {
+  animation-delay: 0.08s;
+}
+.depth-layers-view .depth-layer-card:nth-child(5) {
+  animation-delay: 0.16s;
+}
+
+/* ── Responsive ── */
+@media (max-width: 768px) {
+  .depth-layers-view {
+    padding: 16px;
+    gap: 16px;
+  }
+
+  .depth-layer-card {
+    padding: 14px 16px;
+  }
+
+  .depth-preset-bar {
+    gap: 6px;
+  }
+
+  .depth-preset-btn {
+    padding: 6px 12px;
+    font-size: 0.72rem;
+  }
+
+  .depth-density-row {
+    flex-wrap: wrap;
+  }
+
+  .depth-density-label {
+    width: 100%;
+    margin-bottom: 4px;
+  }
+}
