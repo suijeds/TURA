@@ -244,6 +244,167 @@ export default function EnginePage() {
     setTimeout(() => setApiKeySaved(false), 2000);
   };
 
+  // Parse and render assistant messages: if they contain Shot lists, split and style them as custom cards.
+  const renderAssistantMessage = (content: string) => {
+    const hasShots = /Shot\s*\d+/i.test(content);
+    if (!hasShots) {
+      return renderMarkdown(content);
+    }
+
+    const lines = content.split('\n');
+    const introLines: string[] = [];
+    
+    interface ShotBlock {
+      title: string;
+      contentLines: string[];
+    }
+    const shotBlocks: ShotBlock[] = [];
+    let currentBlock: ShotBlock | null = null;
+
+    for (let i = 0; i < lines.length; i++) {
+      const line = lines[i];
+      const shotMatch = line.match(/(?:^|\||\b)(Shot\s*\d+)(?:\b|\||$)/i);
+      
+      if (shotMatch) {
+        let title = line.trim();
+        if (title.startsWith('|')) {
+          title = title.substring(1);
+        }
+        if (title.endsWith('|')) {
+          title = title.substring(0, title.length - 1);
+        }
+        const titleParts = title.split('|').map(x => x.trim());
+        const actualTitle = titleParts[0];
+        
+        currentBlock = {
+          title: actualTitle,
+          contentLines: titleParts.slice(1)
+        };
+        shotBlocks.push(currentBlock);
+      } else {
+        if (currentBlock) {
+          currentBlock.contentLines.push(line);
+        } else {
+          introLines.push(line);
+        }
+      }
+    }
+
+    return (
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', width: '100%' }}>
+        {introLines.length > 0 && (
+          <div style={{ marginBottom: '4px' }}>
+            {renderMarkdown(introLines.join('\n'))}
+          </div>
+        )}
+        {shotBlocks.map((block, idx) => {
+          let formattedContent = '';
+          
+          // Check if it's formatted as table columns
+          const hasColumns = block.contentLines.some(line => line.includes('|')) || block.contentLines.length > 0;
+          if (hasColumns) {
+            // Flatten all content lines, splitting any internal '|'
+            const allTokens: string[] = [];
+            block.contentLines.forEach(line => {
+              if (line.trim().match(/^[|\s-:]+$/)) return;
+              
+              let clean = line.trim();
+              if (clean.startsWith('|')) clean = clean.substring(1);
+              if (clean.endsWith('|')) clean = clean.substring(0, clean.length - 1);
+              
+              clean.split('|').forEach(token => {
+                if (token.trim()) {
+                  allTokens.push(token.trim());
+                }
+              });
+            });
+            
+            if (allTokens.length > 0) {
+              const labels = l === 'ar' ? [
+                'الكاميرا',
+                'العدسة والإعدادات',
+                'الإضاءة',
+                'حركة الكاميرا',
+                'التكوين والزاوية',
+                'التركيز والتقنية',
+                'الوصف السينمائي',
+                'البرومت الإنجليزي (Prompt)'
+              ] : [
+                'Camera',
+                'Lens & Settings',
+                'Lighting',
+                'Camera Movement',
+                'Composition & Angle',
+                'Focus & Technique',
+                'Description',
+                'English Prompt'
+              ];
+              
+              const formattedLines: string[] = [];
+              for (let c = 0; c < Math.min(allTokens.length, labels.length); c++) {
+                formattedLines.push(`✦ ${labels[c]}: ${allTokens[c]}`);
+              }
+              if (allTokens.length > labels.length) {
+                formattedLines.push(allTokens.slice(labels.length).join('\n'));
+              }
+              formattedContent = formattedLines.join('\n');
+            } else {
+              formattedContent = '';
+            }
+          } else {
+            formattedContent = block.contentLines.join('\n').trim();
+          }
+
+          if (!formattedContent) return null;
+
+          return (
+             <div key={idx} className="prompt-output" style={{ position: 'relative', marginTop: '10px', display: 'flex', flexDirection: 'column' }}>
+               <div className="prompt-label" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                 <span>🎬 {block.title}</span>
+                 <button
+                   onClick={() => {
+                     navigator.clipboard.writeText(formattedContent);
+                     flash(l === 'ar' ? 'تم نسخ تفاصيل اللقطة!' : 'Shot details copied!');
+                   }}
+                   style={{
+                     background: 'rgba(212, 160, 32, 0.12)',
+                     border: '1px solid rgba(212, 160, 32, 0.35)',
+                     color: 'var(--accent)',
+                     borderRadius: '4px',
+                     padding: '3px 8px',
+                     cursor: 'pointer',
+                     fontSize: '0.74rem',
+                     display: 'flex',
+                     alignItems: 'center',
+                     gap: '4px',
+                     transition: 'all 0.2s',
+                     boxShadow: '0 2px 6px rgba(0, 0, 0, 0.3)'
+                   }}
+                   title={l === 'ar' ? 'نسخ اللقطة' : 'Copy Shot'}
+                 >
+                   📋 {l === 'ar' ? 'نسخ' : 'Copy'}
+                 </button>
+               </div>
+               <textarea
+                 className="prompt-box"
+                 readOnly
+                 value={formattedContent}
+                 rows={Math.max(4, formattedContent.split('\n').length)}
+                 style={{
+                   minHeight: '100px',
+                   background: 'var(--bg2)',
+                   borderColor: 'var(--border)',
+                   fontFamily: 'inherit',
+                   fontSize: '0.85rem'
+                 }}
+               />
+             </div>
+          );
+        })}
+      </div>
+    );
+  };
+
   // Simple markdown renderer for assistant messages
   const renderMarkdown = (text: string) => {
     // Split by code blocks first
@@ -276,7 +437,7 @@ export default function EnginePage() {
           return <div key={`${i}-${j}`} style={{ paddingInlineStart: 8 }} dangerouslySetInnerHTML={{ __html: '• ' + processed.slice(2) }} />;
         }
         
-        return <span key={`${i}-${j}`} dangerouslySetInnerHTML={{ __html: processed }} />;
+        return <div key={`${i}-${j}`} style={{ minHeight: '1.2em', marginBottom: '4px' }} dangerouslySetInnerHTML={{ __html: processed }} />;
       });
     });
   };
@@ -1005,7 +1166,7 @@ export default function EnginePage() {
                            ) : null}
 
                             {/* Narrative Camera Movements & Compositions & Technical Options SVG Blueprint Diagrams */}
-                            {['camera_movement', 'composition_style', 'shot_size', 'lens_type', 'subject_scale', 'advanced_framing', 'aperture', 'focal_length', 'depth_of_field', 'aspect_ratio'].includes(grp.cat) && (
+                            {['camera_movement', 'composition_style', 'shot_size', 'lens_type', 'subject_scale', 'advanced_framing', 'aperture', 'focal_length', 'depth_of_field', 'aspect_ratio', 'lighting_setup'].includes(grp.cat) && (
                               <div className="camera-blueprint-wrapper" style={{
                                 width: '100%',
                                 height: '110px',
@@ -1658,6 +1819,369 @@ export default function EnginePage() {
                                       <path d="M146 65c0-6 6-9 14-9s14 3 14 9" stroke="var(--accent)" strokeWidth="2" fill="none"/>
                                     </>
                                   )}
+
+                                  {/* ── LIGHTING SETUPS ── */}
+                                  {item.en === 'Natural Light Only' && (
+                                    <>
+                                      <path d="M25 20 L220 20 M25 35 L220 35 M25 50 L220 50 M25 65 L220 65" stroke="rgba(255,255,255,0.06)" strokeWidth="8" strokeLinecap="round" />
+                                      <path d="M25 27 L220 27 M25 42 L220 42 M25 57 L220 57" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1.5" strokeDasharray="5 5" />
+                                      <circle cx="65" cy="40" r="14" fill="rgba(255, 255, 255, 0.08)" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" />
+                                      <path d="M50 50h30a8 8 0 000-16h-2a10 10 0 00-18 4" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="1.5" strokeLinecap="round" />
+                                      <rect x="140" y="25" width="70" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <rect x="142" y="27" width="66" height="11" rx="2" fill="rgba(255,255,255,0.05)" />
+                                      <text x="175" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">5600K</text>
+                                      <text x="175" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">NEUTRAL DAYLIGHT</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Golden Hour' && (
+                                    <>
+                                      <line x1="25" y1="58" x2="215" y2="58" stroke="rgba(212, 160, 32, 0.3)" strokeWidth="1.5" />
+                                      <path d="M80 58 A25 25 0 01130 58 Z" fill="rgba(212, 160, 32, 0.15)" stroke="var(--accent)" strokeWidth="2" />
+                                      <line x1="105" y1="58" x2="105" y2="20" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
+                                      <line x1="90" y1="48" x2="65" y2="30" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
+                                      <line x1="120" y1="48" x2="145" y2="30" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.6" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(212, 160, 32, 0.1)" />
+                                      <text x="180" y="36" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">3000K</text>
+                                      <text x="180" y="52" fill="var(--accent)" fontSize="7" textAnchor="middle" opacity="0.7">WARM DIFFUSED</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Chiaroscuro' && (
+                                    <>
+                                      <circle cx="85" cy="45" r="22" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                      <path d="M85 23 A22 22 0 0185 67 Z" fill="rgba(255,255,255,0.03)" />
+                                      <path d="M85 23 A22 22 0 0185 67 Z" fill="none" stroke="rgba(255, 255, 255, 0.15)" strokeWidth="1.5" strokeDasharray="2 2" />
+                                      <polygon points="25,18 73,38 68,52 25,72" fill="rgba(212, 160, 32, 0.12)" />
+                                      <line x1="25" y1="18" x2="73" y2="38" stroke="var(--accent)" strokeWidth="1.5" opacity="0.8" />
+                                      <line x1="25" y1="72" x2="68" y2="52" stroke="var(--accent)" strokeWidth="1.5" opacity="0.8" />
+                                      <text x="85" y="48" fill="#ffffff" fontSize="9" fontWeight="bold" textAnchor="middle" opacity="0.8">8:1</text>
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(255,255,255,0.05)" />
+                                      <text x="180" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">4000K</text>
+                                      <text x="180" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">HIGH CONTRAST</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Neon Lit' && (
+                                    <>
+                                      <line x1="60" y1="20" x2="60" y2="70" stroke="#ff007f" strokeWidth="5" strokeLinecap="round" opacity="0.3" />
+                                      <line x1="60" y1="20" x2="60" y2="70" stroke="#ff007f" strokeWidth="2.5" strokeLinecap="round" />
+                                      <line x1="90" y1="20" x2="90" y2="70" stroke="#00ffff" strokeWidth="5" strokeLinecap="round" opacity="0.3" />
+                                      <line x1="90" y1="20" x2="90" y2="70" stroke="#00ffff" strokeWidth="2.5" strokeLinecap="round" />
+                                      <circle cx="75" cy="45" r="15" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="4 4" fill="none" opacity="0.4" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(255,255,255,0.05)" />
+                                      <text x="180" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">6500K</text>
+                                      <text x="180" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">NEON GLOW</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Practical Lights' && (
+                                    <>
+                                      <line x1="85" y1="10" x2="85" y2="35" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                                      <path d="M78 35h14v5h-14zm2 5h10v4H80z" fill="rgba(255,255,255,0.4)" />
+                                      <circle cx="85" cy="52" r="11" fill="rgba(212, 160, 32, 0.15)" stroke="var(--accent)" strokeWidth="1.5" />
+                                      <path d="M82 52 l2-5 2 5" stroke="var(--accent)" strokeWidth="1.5" fill="none" />
+                                      <circle cx="85" cy="52" r="18" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" fill="none" />
+                                      <circle cx="85" cy="52" r="25" stroke="var(--accent)" strokeWidth="1" strokeDasharray="5 5" opacity="0.2" fill="none" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(212, 160, 32, 0.1)" />
+                                      <text x="180" y="36" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">2800K</text>
+                                      <text x="180" y="52" fill="var(--accent)" fontSize="7" textAnchor="middle" opacity="0.7">TUNGSTEN WARM</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Moonlight' && (
+                                    <>
+                                      <path d="M70 25 A15 15 0 0 1 85 49 A13 13 0 1 0 70 25 Z" fill="rgba(255, 255, 255, 0.08)" stroke="#a5b4fc" strokeWidth="2" />
+                                      <line x1="85" y1="50" x2="120" y2="70" stroke="#a5b4fc" strokeWidth="1.5" strokeDasharray="5 5" opacity="0.7" />
+                                      <line x1="70" y1="46" x2="105" y2="66" stroke="#a5b4fc" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.5" />
+                                      <line x1="90" y1="36" x2="125" y2="56" stroke="#a5b4fc" strokeWidth="1.5" strokeDasharray="3 3" opacity="0.5" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(165, 180, 252, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(165, 180, 252, 0.1)" />
+                                      <text x="180" y="36" fill="#a5b4fc" fontSize="8" fontWeight="bold" textAnchor="middle">4200K</text>
+                                      <text x="180" y="52" fill="#a5b4fc" fontSize="7" textAnchor="middle" opacity="0.7">BLUE-SILVER TINT</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Spotlight / High Key Drama' && (
+                                    <>
+                                      <path d="M110 15 h20 l-3 5 h-14 z" fill="rgba(255,255,255,0.4)" stroke="#ffffff" strokeWidth="1" />
+                                      <polygon points="120,20 70,75 170,75" fill="rgba(255,255,255,0.06)" />
+                                      <line x1="120" y1="20" x2="70" y2="75" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <line x1="120" y1="20" x2="170" y2="75" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <ellipse cx="120" cy="74" rx="50" ry="4" fill="rgba(255, 255, 255, 0.15)" />
+                                      <rect x="25" y="25" width="40" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="45" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">5000K</text>
+                                      <text x="45" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">THEATRICAL</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Low-Key Noir' && (
+                                    <>
+                                      <rect x="25" y="20" width="100" height="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                                      <rect x="25" y="34" width="100" height="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                                      <rect x="25" y="48" width="100" height="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                                      <rect x="25" y="62" width="100" height="8" fill="rgba(255,255,255,0.03)" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+                                      <circle cx="105" cy="45" r="18" fill="none" stroke="rgba(255,255,255,0.4)" strokeWidth="1.5" />
+                                      <line x1="25" y1="20" x2="215" y2="65" stroke="rgba(0,0,0,0.8)" strokeWidth="4" opacity="0.6" />
+                                      <line x1="25" y1="34" x2="215" y2="79" stroke="rgba(0,0,0,0.8)" strokeWidth="4" opacity="0.6" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(255,255,255,0.05)" />
+                                      <text x="180" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">3200K</text>
+                                      <text x="180" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">NOIR SHADOWS</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'High-Key Studio' && (
+                                    <>
+                                      <circle cx="100" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.5)" strokeWidth="2" />
+                                      <path d="M40 25 L50 32 M40 65 L50 58 M150 45 L135 45" stroke="var(--accent)" strokeWidth="2" strokeLinecap="round" />
+                                      <circle cx="35" cy="22" r="3" fill="var(--accent)" />
+                                      <circle cx="35" cy="68" r="3" fill="var(--accent)" />
+                                      <circle cx="155" cy="45" r="3" fill="var(--accent)" />
+                                      <circle cx="100" cy="45" r="22" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1" strokeDasharray="3 3" fill="none" />
+                                      <rect x="175" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="197" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">5200K</text>
+                                      <text x="197" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">STUDIO WRAP</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Rembrandt Portraiture' && (
+                                    <>
+                                      <polygon points="25,15 90,38 75,60 25,45" fill="rgba(212, 160, 32, 0.1)" />
+                                      <line x1="25" y1="15" x2="90" y2="38" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 1" />
+                                      <line x1="25" y1="45" x2="75" y2="60" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 1" />
+                                      <circle cx="120" cy="45" r="16" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                                      <polygon points="113,44 118,44 115,49" fill="var(--accent)" />
+                                      <rect x="165" y="25" width="50" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="190" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">4500K</text>
+                                      <text x="190" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">45° KEY LIGHT</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Teal & Orange Split' && (
+                                    <>
+                                      <circle cx="95" cy="45" r="18" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+                                      <path d="M40 25 L65 38 M40 65 L65 52" stroke="#00ffff" strokeWidth="2" />
+                                      <circle cx="35" cy="22" r="3" fill="#00ffff" />
+                                      <path d="M95 27 A18 18 0 0 0 95 63 Z" fill="rgba(0, 255, 255, 0.15)" />
+                                      <path d="M150 25 L125 38 M150 65 L125 52" stroke="var(--accent)" strokeWidth="2" />
+                                      <circle cx="155" cy="22" r="3" fill="var(--accent)" />
+                                      <path d="M95 27 A18 18 0 0 1 95 63 Z" fill="rgba(212, 160, 32, 0.15)" />
+                                      <rect x="170" y="25" width="55" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="197" y="36" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">6K / 3.2K</text>
+                                      <text x="197" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">BI-COLOR</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Candlelit Intimacy' && (
+                                    <>
+                                      <rect x="80" y="50" width="10" height="25" rx="1" fill="rgba(255,255,255,0.2)" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                                      <line x1="85" y1="50" x2="85" y2="44" stroke="#ffaa44" strokeWidth="1.5" />
+                                      <path d="M85 30 C81 37 81 44 85 44 C89 44 89 37 85 30 Z" fill="rgba(212, 160, 32, 0.3)" stroke="var(--accent)" strokeWidth="1.5" />
+                                      <circle cx="85" cy="40" r="14" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" fill="none" />
+                                      <circle cx="85" cy="40" r="22" stroke="var(--accent)" strokeWidth="1" strokeDasharray="5 5" opacity="0.15" fill="none" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(212, 160, 32, 0.1)" />
+                                      <text x="180" y="36" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">1800K</text>
+                                      <text x="180" y="52" fill="var(--accent)" fontSize="7" textAnchor="middle" opacity="0.7">CANDLE WARMTH</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Sodium Vapor Streetlights' && (
+                                    <>
+                                      <path d="M50 75 L50 25 C50 15 75 15 75 22" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" />
+                                      <rect x="70" y="22" width="10" height="4" rx="1" fill="rgba(212, 160, 32, 0.6)" />
+                                      <polygon points="75,26 50,75 120,75" fill="rgba(212, 160, 32, 0.1)" />
+                                      <line x1="75" y1="26" x2="50" y2="75" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+                                      <line x1="75" y1="26" x2="120" y2="75" stroke="var(--accent)" strokeWidth="1" strokeDasharray="3 3" opacity="0.5" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(212, 160, 32, 0.1)" />
+                                      <text x="180" y="36" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">2500K</text>
+                                      <text x="180" y="52" fill="var(--accent)" fontSize="7" textAnchor="middle" opacity="0.7">SODIUM AMBER</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Mercury Vapor Industrial' && (
+                                    <>
+                                      <rect x="55" y="20" width="30" height="15" rx="2" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                                      <line x1="70" y1="20" x2="70" y2="12" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                                      <polygon points="70,35 30,75 110,75" fill="rgba(0, 255, 200, 0.08)" />
+                                      <line x1="70" y1="35" x2="30" y2="75" stroke="#00ffcc" strokeWidth="1.5" opacity="0.6" />
+                                      <line x1="70" y1="35" x2="110" y2="75" stroke="#00ffcc" strokeWidth="1.5" opacity="0.6" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(0, 255, 200, 0.2)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(0, 255, 200, 0.05)" />
+                                      <text x="180" y="36" fill="#00ffcc" fontSize="8" fontWeight="bold" textAnchor="middle">7200K</text>
+                                      <text x="180" y="52" fill="#00ffcc" fontSize="7" textAnchor="middle" opacity="0.7">MERCURY GREEN-BLUE</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Volumetric God Rays' && (
+                                    <>
+                                      <polygon points="25,12 85,12 165,78 105,78" fill="rgba(255,255,255,0.06)" />
+                                      <line x1="30" y1="12" x2="110" y2="78" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeDasharray="6 3" />
+                                      <line x1="50" y1="12" x2="130" y2="78" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeDasharray="6 3" />
+                                      <line x1="70" y1="12" x2="150" y2="78" stroke="rgba(255,255,255,0.25)" strokeWidth="1.5" strokeDasharray="6 3" />
+                                      <circle cx="65" cy="30" r="1.5" fill="#ffffff" opacity="0.8" />
+                                      <circle cx="95" cy="45" r="1" fill="#ffffff" opacity="0.6" />
+                                      <circle cx="125" cy="60" r="1.2" fill="#ffffff" opacity="0.7" />
+                                      <rect x="165" y="25" width="50" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="190" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">5600K</text>
+                                      <text x="190" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">GOD RAYS</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Flickering Firelight' && (
+                                    <>
+                                      <line x1="70" y1="68" x2="100" y2="60" stroke="#8b5a2b" strokeWidth="3" strokeLinecap="round" />
+                                      <line x1="100" y1="68" x2="70" y2="60" stroke="#8b5a2b" strokeWidth="3" strokeLinecap="round" />
+                                      <path d="M85 32 C78 45 72 58 85 58 C98 58 92 45 85 32 Z" fill="rgba(239, 68, 68, 0.15)" stroke="#ef4444" strokeWidth="1.5" />
+                                      <path d="M85 40 C80 48 76 56 85 56 C94 56 90 48 85 40 Z" fill="rgba(249, 115, 22, 0.25)" stroke="#f97316" strokeWidth="1.5" />
+                                      <circle cx="82" cy="25" r="1" fill="#f97316" />
+                                      <circle cx="89" cy="20" r="1" fill="#f97316" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(239, 68, 68, 0.3)" />
+                                      <rect x="152" y="27" width="56" height="11" rx="2" fill="rgba(239, 68, 68, 0.05)" />
+                                      <text x="180" y="36" fill="#ef4444" fontSize="8" fontWeight="bold" textAnchor="middle">2000K</text>
+                                      <text x="180" y="52" fill="#ef4444" fontSize="7" textAnchor="middle" opacity="0.7">FIRELIGHT GLOW</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Dappled Gobo Moonlight' && (
+                                    <>
+                                      <circle cx="55" cy="30" r="12" fill="rgba(165, 180, 252, 0.08)" stroke="#a5b4fc" strokeWidth="1.5" />
+                                      <path d="M60 21 A12 12 0 0 0 60 39 Z" fill="#a5b4fc" opacity="0.3" />
+                                      <path d="M80 20 Q95 25 90 40 Q75 35 80 20 Z" fill="rgba(0,0,0,0.45)" stroke="rgba(165,180,252,0.15)" strokeWidth="1" />
+                                      <path d="M100 45 Q115 50 110 65 Q95 60 100 45 Z" fill="rgba(0,0,0,0.45)" stroke="rgba(165,180,252,0.15)" strokeWidth="1" />
+                                      <path d="M65 50 Q80 55 75 70 Q60 65 65 50 Z" fill="rgba(0,0,0,0.45)" stroke="rgba(165,180,252,0.15)" strokeWidth="1" />
+                                      <line x1="55" y1="42" x2="120" y2="78" stroke="#a5b4fc" strokeWidth="1" strokeDasharray="3 3" opacity="0.4" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(165,180,252,0.3)" />
+                                      <text x="180" y="36" fill="#a5b4fc" fontSize="8" fontWeight="bold" textAnchor="middle">4200K</text>
+                                      <text x="180" y="52" fill="#a5b4fc" fontSize="7" textAnchor="middle" opacity="0.7">DAPPLED SHADOWS</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Emergency Strobe Flash' && (
+                                    <>
+                                      <polygon points="60,15 20,75 80,75" fill="rgba(239, 68, 68, 0.12)" />
+                                      <line x1="60" y1="15" x2="20" y2="75" stroke="#ef4444" strokeWidth="1.5" opacity="0.7" />
+                                      <line x1="60" y1="15" x2="80" y2="75" stroke="#ef4444" strokeWidth="1.5" opacity="0.7" />
+                                      <polygon points="120,15 100,75 160,75" fill="rgba(59, 130, 246, 0.12)" />
+                                      <line x1="120" y1="15" x2="100" y2="75" stroke="#3b82f6" strokeWidth="1.5" opacity="0.7" />
+                                      <line x1="120" y1="15" x2="160" y2="75" stroke="#3b82f6" strokeWidth="1.5" opacity="0.7" />
+                                      <circle cx="60" cy="15" r="4" fill="#ef4444" />
+                                      <circle cx="120" cy="15" r="4" fill="#3b82f6" />
+                                      <rect x="175" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="197" y="36" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">RED/BLUE</text>
+                                      <text x="197" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">DYNAMIC FLASH</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Bioluminescent Glow' && (
+                                    <>
+                                      <path d="M40 75 Q60 40 85 45 T130 20" fill="none" stroke="rgba(0, 255, 200, 0.2)" strokeWidth="3" />
+                                      <path d="M40 75 Q60 40 85 45 T130 20" fill="none" stroke="#00ffcc" strokeWidth="1.5" />
+                                      <circle cx="60" cy="52" r="3" fill="#00ffcc" opacity="0.8" />
+                                      <circle cx="85" cy="45" r="4" fill="#00ffff" opacity="0.9" />
+                                      <circle cx="108" cy="33" r="3" fill="#00ffcc" opacity="0.8" />
+                                      <circle cx="70" cy="25" r="1.5" fill="#00ffff" opacity="0.7" />
+                                      <circle cx="100" cy="15" r="1.2" fill="#00ffcc" opacity="0.6" />
+                                      <circle cx="120" cy="45" r="2" fill="#00ffff" opacity="0.5" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(0, 255, 200, 0.2)" />
+                                      <text x="180" y="36" fill="#00ffcc" fontSize="8" fontWeight="bold" textAnchor="middle">4800K</text>
+                                      <text x="180" y="52" fill="#00ffcc" fontSize="7" textAnchor="middle" opacity="0.7">ORGANIC GLOW</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Urban Sodium & Cyan Contrast' && (
+                                    <>
+                                      <circle cx="95" cy="45" r="16" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                                      <polygon points="40,15 15,75 75,75" fill="rgba(212, 160, 32, 0.12)" />
+                                      <line x1="40" y1="15" x2="15" y2="75" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6" />
+                                      <line x1="40" y1="15" x2="75" y2="75" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6" />
+                                      <circle cx="40" cy="15" r="3" fill="var(--accent)" />
+                                      <polygon points="150,15 120,75 180,75" fill="rgba(0, 255, 255, 0.1)" />
+                                      <line x1="150" y1="15" x2="120" y2="75" stroke="#00ffff" strokeWidth="1.5" opacity="0.6" />
+                                      <line x1="150" y1="15" x2="180" y2="75" stroke="#00ffff" strokeWidth="1.5" opacity="0.6" />
+                                      <circle cx="150" cy="15" r="3" fill="#00ffff" />
+                                      <rect x="175" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="197" y="36" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">2.5K / 6K</text>
+                                      <text x="197" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">URBAN SPLIT</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Handheld Flashlight Beam' && (
+                                    <>
+                                      <rect x="30" y="42" width="20" height="6" rx="1" fill="rgba(255,255,255,0.4)" />
+                                      <polygon points="50,40 54,38 54,52 50,50" fill="rgba(255,255,255,0.6)" />
+                                      <polygon points="54,45 180,15 180,75" fill="rgba(255,255,255,0.06)" />
+                                      <line x1="54" y1="45" x2="180" y2="15" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <line x1="54" y1="45" x2="180" y2="75" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <circle cx="85" cy="40" r="1.2" fill="#ffffff" opacity="0.8" />
+                                      <circle cx="120" cy="50" r="1" fill="#ffffff" opacity="0.6" />
+                                      <circle cx="150" cy="35" r="1.5" fill="#ffffff" opacity="0.7" />
+                                      <rect x="180" y="25" width="40" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="200" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">5000K</text>
+                                      <text x="200" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">SEARCH LIGHT</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Motivated TV Glow' && (
+                                    <>
+                                      <rect x="30" y="25" width="25" height="18" rx="2" fill="none" stroke="#00a8ff" strokeWidth="1.5" />
+                                      <line x1="38" y1="43" x2="35" y2="48" stroke="#00a8ff" strokeWidth="1.5" />
+                                      <line x1="47" y1="43" x2="50" y2="48" stroke="#00a8ff" strokeWidth="1.5" />
+                                      <path d="M65 25 Q75 35 65 45 T65 65" fill="none" stroke="rgba(0, 168, 255, 0.4)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <path d="M75 20 Q88 35 75 50 T75 70" fill="none" stroke="rgba(0, 168, 255, 0.2)" strokeWidth="1.5" strokeDasharray="5 5" />
+                                      <circle cx="125" cy="45" r="15" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1.5" />
+                                      <path d="M125 30 A15 15 0 0 0 125 60 Z" fill="rgba(0, 168, 255, 0.1)" />
+                                      <rect x="160" y="25" width="50" height="15" rx="3" fill="none" stroke="rgba(0, 168, 255, 0.3)" />
+                                      <text x="185" y="36" fill="#00a8ff" fontSize="8" fontWeight="bold" textAnchor="middle">6500K</text>
+                                      <text x="185" y="52" fill="#00a8ff" fontSize="7" textAnchor="middle" opacity="0.7">TV REFLECTION</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Golden Rim Light Glow' && (
+                                    <>
+                                      <polygon points="40,15 15,45 40,75" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                      <line x1="20" y1="45" x2="80" y2="45" stroke="var(--accent)" strokeWidth="2" />
+                                      <polygon points="80,45 72,41 72,49" fill="var(--accent)" />
+                                      <circle cx="110" cy="45" r="18" fill="rgba(0, 0, 0, 0.6)" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                      <path d="M92 45 A18 18 0 0 1 110 27" fill="none" stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" />
+                                      <path d="M92 45 A18 18 0 0 1 110 27" fill="none" stroke="#ffffff" strokeWidth="1.5" strokeLinecap="round" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                      <text x="180" y="36" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">3000K</text>
+                                      <text x="180" y="52" fill="var(--accent)" fontSize="7" textAnchor="middle" opacity="0.7">GOLDEN HALO</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Monochrome Pure Silhouette' && (
+                                    <>
+                                      <polygon points="120,10 60,80 180,80" fill="rgba(255,255,255,0.08)" />
+                                      <circle cx="120" cy="45" r="16" fill="#070709" stroke="#ffffff" strokeWidth="2" />
+                                      <circle cx="120" cy="45" r="16" fill="#000000" />
+                                      <path d="M95 78c0-10 10-15 25-15s25 5 25 15v2H95z" fill="#000000" stroke="#ffffff" strokeWidth="2" />
+                                      <path d="M95 78c0-10 10-15 25-15s25 5 25 15v2H95z" fill="#000000" />
+                                      <rect x="25" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="47" y="36" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">BACKLIT</text>
+                                      <text x="47" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">SILHOUETTE</text>
+                                    </>
+                                  )}
+
+                                  {item.en === 'Overcast Flat Diffusion' && (
+                                    <>
+                                      <path d="M25 25 Q35 15 45 25 T65 25 T85 25 T105 25 T125 25 T145 25 T165 25 T185 25 T205 25" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+                                      <path d="M20 32 Q30 22 40 32 T60 32 T80 32 T100 32 T120 32 T140 32 T160 32 T180 32 T200 32" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
+                                      <line x1="30" y1="50" x2="210" y2="50" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                      <line x1="30" y1="58" x2="210" y2="58" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                      <line x1="30" y1="66" x2="210" y2="66" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                      <rect x="150" y="25" width="60" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
+                                      <text x="180" y="36" fill="#ffffff" fontSize="8" fontWeight="bold" textAnchor="middle">6000K</text>
+                                      <text x="180" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">GLOOMY DIFFUSED</text>
+                                    </>
+                                  )}
                                 </svg>
                               </div>
                             )}
@@ -1870,7 +2394,7 @@ export default function EnginePage() {
                     ) : (
                       engine.chatMessages.map(msg => (
                         <div key={msg.id} className={`chat-bubble ${msg.role}`}>
-                          {msg.role === 'assistant' ? renderMarkdown(msg.content) : msg.content}
+                          {msg.role === 'assistant' ? renderAssistantMessage(msg.content) : msg.content}
                         </div>
                       ))
                     )}

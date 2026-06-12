@@ -18,8 +18,11 @@ export async function POST(req: NextRequest) {
       );
     }
 
+    // Keep only the last 8 messages to reduce token usage and keep optimal context
+    const recentMessages = messages.slice(-8);
+
     // Format messages for Gemini API
-    const contents = messages.map((m: { role: string; content: string }) => ({
+    const contents = recentMessages.map((m: { role: string; content: string }) => ({
       role: m.role === 'assistant' ? 'model' : 'user',
       parts: [{ text: m.content }],
     }));
@@ -51,6 +54,13 @@ export async function POST(req: NextRequest) {
       }
       
       console.error('Gemini API error:', response.status, errBody);
+      try {
+        const parsedErr = JSON.parse(errBody);
+        const detail = parsedErr.error?.message || errBody;
+        errorMsg = `${errorMsg} - Details: ${detail}`;
+      } catch {
+        errorMsg = `${errorMsg} - Details: ${errBody}`;
+      }
       return NextResponse.json({ error: errorMsg }, { status: response.status });
     }
 

@@ -604,8 +604,8 @@ export function usePromptEngine() {
 
       const sysPrompt = buildSystemPrompt(lang, colorData, depthData);
 
-      // Build messages array (last 20 messages for context window)
-      const recentMessages = [...chatMessages, userMsg].slice(-20).map(m => ({
+      // Build messages array (last 6 messages for context window to save tokens)
+      const recentMessages = [...chatMessages, userMsg].slice(-6).map(m => ({
         role: m.role,
         content: m.content,
       }));
