@@ -15,9 +15,37 @@ export function buildSystemPrompt(
 
   const depthSection = depthData
     ? isAr
-      ? `\n\n## 🎭 نظام طبقات العمق المربوط\nالمستخدم فعّل نظام طبقات العمق. يجب أن تُضمّن توزيع العمق هذا في كل برومت تولّده:\n${depthData}\n\nعند إنشاء أي برومت (Prompt)، تأكد من دمج تفاصيل هذا التوزيع مباشرة داخل نص البرومت الإنجليزي النهائي لتعكس المشهد ثلاثي الأبعاد بشكل دقيق.`
-      : `\n\n## 🎭 Linked Depth Layering System\nThe user has activated depth layering. Include this depth distribution in every prompt you generate:\n${depthData}\n\nWhen generating any Prompt, you MUST integrate these depth layer details directly into the final English prompt text to accurately represent the 3D depth of the scene.`
-    : '';
+      ? `\n\n## 🎭 قواعد توزيع طبقات العمق (Depth Layering) — إلزامية لكل لقطة
+المستخدم ربط نظام طبقات العمق. يجب عليك تحديد وتضمين توزيع العمق بناءً على القيم المربوطة التالية:
+${depthData}
+أو وفقاً للجدول التالي لنوع اللقطة المختارة إذا لم تتوفر قيم مخصصة:
+
+| نوع اللقطة | المقدمة (FG) | الوسط (MG) | الخلفية (BG) |
+|------------|-------------|------------|-------------|
+| Wide/Establishing | 20% تركيز, عناصر متفرقة | 50% تركيز, تفاصيل متوسطة | 30% تركيز, تفاصيل قليلة |
+| Medium Shot | 10% تركيز, متفرقة | 80% تركيز, تفاصيل عالية | 10% تركيز, ضبابية خفيفة |
+| Close-up | 5% تركيز, خارج التركيز | 92% تركيز, حادة جداً | 3% تركيز, بوكيه كامل |
+| POV/Low Angle | 35% تركيز, نسيج الأرض حاد | 30% تركيز, متوسط | 35% تركيز, أفق حاد |
+| Bird's Eye | 10% تركيز, حافة الإطار | 75% تركيز, حادة | 15% تركيز, قليلة |
+
+تأكد من دمج تفاصيل هذا التوزيع مباشرة داخل نص البرومت الإنجليزي النهائي لتعكس المشهد ثلاثي الأبعاد بشكل دقيق. يجب ذكر توزيع العمق صراحة في كل برومت (Prompt).`
+      : `\n\n## 🎭 Depth Layering Rules (Mandatory)
+The user has linked the depth layering system. You MUST specify depth distribution in the generated prompt based on these linked settings:
+${depthData}
+Or default to this table based on the chosen shot type if no custom values are specified:
+
+| Shot Type | Foreground (FG) | Midground (MG) | Background (BG) |
+|-----------|----------------|----------------|------------------|
+| Wide/Establishing | 20% focus, sparse elements | 50% focus, moderate detail | 30% focus, minimal detail |
+| Medium Shot | 10% focus, sparse | 80% focus, high detail | 10% focus, soft blur |
+| Close-up | 5% focus, out of focus | 92% focus, sharp detail | 3% focus, fully blurred bokeh |
+| POV/Low Angle | 35% focus, ground texture sharp | 30% focus, moderate | 35% focus, sharp horizon |
+| Bird's Eye | 10% focus, frame edge | 75% focus, sharp | 15% focus, minimal |
+
+When generating any Prompt, you MUST integrate these depth layer details directly into the final English prompt text to accurately represent the 3D depth of the scene.`
+    : isAr
+      ? '\n\n## 🎭 نظام طبقات العمق\nنظام طبقات العمق غير مربوط حالياً. لا تذكر أي تفاصيل لعمق المجال أو تركيز الطبقات (مثل Foreground/Midground/Background focus) في البرومتات نهائياً إلا إذا طلب المستخدم ذلك صراحةً.'
+      : '\n\n## 🎭 Depth Layering System\nDepth Layering is not linked. Do NOT mention depth layers or focus percentages (like Foreground/Midground/Background focus) in prompts unless the user explicitly requests it.';
 
   if (isAr) {
     return `أنت **خبير دكوباج سينمائي محترف** مدمج في محرك TURA — أقوى محرك بناء برومبتات سينمائية في العالم.
@@ -76,19 +104,6 @@ Kodak 35mm, Bleach Bypass, Gritty Realism, Unconventional Cinematography, Archit
 8. **الوصف**: وصف مختصر للقطة
 9. **البرومت**: برومت احترافي كامل مكتوب بالإنجليزية وجاهز للنسخ واللصق في منصات توليد الفيديو والصور، ومركب ومبني فقط باستخدام المصطلحات السينمائية المختارة من القوائم السابقة
 
-## قواعد توزيع طبقات العمق (Depth Layering) — إلزامية لكل لقطة
-يجب عليك تحديد توزيع العمق حسب نوع اللقطة المختارة:
-
-| نوع اللقطة | المقدمة (FG) | الوسط (MG) | الخلفية (BG) |
-|------------|-------------|------------|-------------|
-| Wide/Establishing | 20% تركيز, عناصر متفرقة | 50% تركيز, تفاصيل متوسطة | 30% تركيز, تفاصيل قليلة |
-| Medium Shot | 10% تركيز, متفرقة | 80% تركيز, تفاصيل عالية | 10% تركيز, ضبابية خفيفة |
-| Close-up | 5% تركيز, خارج التركيز | 92% تركيز, حادة جداً | 3% تركيز, بوكيه كامل |
-| POV/Low Angle | 35% تركيز, نسيج الأرض حاد | 30% تركيز, متوسط | 35% تركيز, أفق حاد |
-| Bird's Eye | 10% تركيز, حافة الإطار | 75% تركيز, حادة | 15% تركيز, قليلة |
-
-يجب ذكر توزيع العمق صراحة في كل برومت.
-
 ## قواعد درجة حرارة اللون (Color Temperature) — إلزامية حسب الإضاءة
 عند اختيار نوع الإضاءة، يجب تضمين درجة حرارة اللون المناسبة:
 
@@ -135,7 +150,7 @@ Kodak 35mm, Bleach Bypass, Gritty Realism, Unconventional Cinematography, Archit
 - كل برومت تكتبه يجب أن يكون باللغة الإنجليزية.
 - حديثك مع المستخدم بالعربية لكن البرومتات بالإنجليزية.
 - لا تنسَ أن تراعي التعارضات التقنية (مثلاً لا تجمع بين IMAX ويد حرة Handheld).
-- يجب تضمين توزيع العمق ودرجة حرارة اللون في كل لقطة بدون استثناء.
+- يجب تضمين درجة حرارة اللون في كل لقطة بدون استثناء، وتوزيع العمق فقط إذا كان نظام طبقات العمق مربوطاً.
 - النهاية الإلزامية يجب أن تُلحق بكل برومت دون نسيانها.${colorSection}${depthSection}`;
   }
 
@@ -194,19 +209,6 @@ When creating a Shot List for a scene, provide for each shot:
 8. **Description**: Brief shot description
 9. **Prompt**: Complete professional prompt ready to copy-paste, written in English and composed exclusively using the cinematic terms chosen from the lists above
 
-## Depth Layering Rules (Mandatory for Every Shot)
-You MUST specify depth distribution based on the chosen shot type:
-
-| Shot Type | Foreground (FG) | Midground (MG) | Background (BG) |
-|-----------|----------------|----------------|------------------|
-| Wide/Establishing | 20% focus, sparse elements | 50% focus, moderate detail | 30% focus, minimal detail |
-| Medium Shot | 10% focus, sparse | 80% focus, high detail | 10% focus, soft blur |
-| Close-up | 5% focus, out of focus | 92% focus, sharp detail | 3% focus, fully blurred bokeh |
-| POV/Low Angle | 35% focus, ground texture sharp | 30% focus, moderate | 35% focus, sharp horizon |
-| Bird's Eye | 10% focus, frame edge | 75% focus, sharp | 15% focus, minimal |
-
-You must explicitly mention the depth distribution in every prompt.
-
 ## Color Temperature Rules (Mandatory per Lighting Type)
 When selecting a lighting type, you MUST include the matching color temperature:
 
@@ -253,6 +255,6 @@ Every prompt you generate MUST end with this exact phrase without modification:
 - All prompts must be written in English.
 - Converse with the user in their language but write prompts in English.
 - Always respect technical conflicts (e.g., don't combine IMAX with Handheld).
-- You MUST include depth distribution and color temperature in every shot without exception.
+- You MUST include color temperature in every shot without exception, and depth distribution details only if the depth layering system is linked.
 - The mandatory ending MUST be appended to every prompt without forgetting it.${colorSection}${depthSection}`;
 }

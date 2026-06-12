@@ -473,21 +473,21 @@ export function usePromptEngine() {
       }
     }
     let result = parts.join(', ').trim();
-    if (colorPrompt) {
+    if (isColorLabLinked && colorPrompt) {
       if (result) {
         result += ', ' + colorPrompt;
       } else {
         result = colorPrompt;
       }
     }
-    if (colorRulePrompt) {
+    if (isColorLabLinked && colorRulePrompt) {
       if (result) {
         result += ', ' + colorRulePrompt;
       } else {
         result = colorRulePrompt;
       }
     }
-    if (depthPrompt) {
+    if (isDepthLinked && depthPrompt) {
       if (result) {
         result += ', ' + depthPrompt;
       } else {
@@ -495,7 +495,7 @@ export function usePromptEngine() {
       }
     }
     return result;
-  }, [selections, subject, colorPrompt, colorRulePrompt, depthPrompt]);
+  }, [selections, subject, colorPrompt, colorRulePrompt, depthPrompt, isColorLabLinked, isDepthLinked]);
 
   const conflicts = useMemo(() => {
     return CONFLICTS.filter(c => {

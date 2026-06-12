@@ -1166,7 +1166,7 @@ export default function EnginePage() {
                            ) : null}
 
                             {/* Narrative Camera Movements & Compositions & Technical Options SVG Blueprint Diagrams */}
-                            {['camera_movement', 'composition_style', 'shot_size', 'lens_type', 'subject_scale', 'advanced_framing', 'aperture', 'focal_length', 'depth_of_field', 'aspect_ratio', 'lighting_setup'].includes(grp.cat) && (
+                            {['camera_body', 'camera_movement', 'composition_style', 'shot_size', 'lens_type', 'subject_scale', 'advanced_framing', 'aperture', 'focal_length', 'depth_of_field', 'aspect_ratio', 'lighting_setup', 'technique', 'mod_lenses', 'mod_framing', 'mod_color', 'mod_camera'].includes(grp.cat) && (
                               <div className="camera-blueprint-wrapper" style={{
                                 width: '100%',
                                 height: '110px',
@@ -1306,7 +1306,7 @@ export default function EnginePage() {
                                     <>
                                       <circle cx="50" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5"/>
                                       <circle cx="120" cy="45" r="14" fill="none" stroke="var(--accent)" strokeWidth="2.5"/>
-                                      <circle cx="190" cy="45" r="14" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3"/>
+                                      <circle cx="190" cy="45" r="14" fill="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3 3"/>
                                       <path d="M30 45h160" stroke="var(--accent)" strokeWidth="2" strokeDasharray="5 3"/>
                                       <polygon points="190,45 180,41 180,49" fill="var(--accent)"/>
                                     </>
@@ -2163,7 +2163,7 @@ export default function EnginePage() {
                                       <circle cx="120" cy="45" r="16" fill="#070709" stroke="#ffffff" strokeWidth="2" />
                                       <circle cx="120" cy="45" r="16" fill="#000000" />
                                       <path d="M95 78c0-10 10-15 25-15s25 5 25 15v2H95z" fill="#000000" stroke="#ffffff" strokeWidth="2" />
-                                      <path d="M95 78c0-10 10-15 25-15s25 5 25 15v2H95z" fill="#000000" />
+<path d="M95 78c0-10 10-15 25-15s25 5 25 15v2H95z" fill="#000000" />
                                       <rect x="25" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" />
                                       <text x="47" y="36" fill="#ffffff" fontSize="7" fontWeight="bold" textAnchor="middle">BACKLIT</text>
                                       <text x="47" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">SILHOUETTE</text>
@@ -2182,6 +2182,337 @@ export default function EnginePage() {
                                       <text x="180" y="52" fill="rgba(255,255,255,0.4)" fontSize="7" textAnchor="middle">GLOOMY DIFFUSED</text>
                                     </>
                                   )}
+                                   {item.en === 'Time-Lapse' && (
+                                     <>
+                                       <path d="M 40 60 A 80 80 0 0 1 200 60" fill="none" stroke="var(--accent)" strokeWidth="2" strokeDasharray="4 4" />
+                                       <circle cx="40" cy="60" r="3" fill="var(--accent)" />
+                                       <circle cx="80" cy="30" r="3" fill="var(--accent)" opacity="0.4" />
+                                       <circle cx="120" cy="20" r="5" fill="var(--accent)" />
+                                       <circle cx="160" cy="30" r="3" fill="var(--accent)" opacity="0.4" />
+                                       <circle cx="200" cy="60" r="3" fill="var(--accent)" />
+                                       <path d="M 60 70 L 180 70" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="5 5" />
+                                       <path d="M 170 66 L 180 70 L 170 74" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <circle cx="35" cy="25" r="10" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <path d="M 35 20 V 25 H 40" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                     </>
+                                   )}
+
+                                   {item.en === 'Slow Motion' && (
+                                     <>
+                                       <line x1="30" y1="70" x2="210" y2="70" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <path d="M 120 15 V 70" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1" strokeDasharray="3 3" />
+                                       <circle cx="120" cy="25" r="2" fill="var(--accent)" opacity="0.3" />
+                                       <circle cx="120" cy="40" r="3.5" fill="var(--accent)" opacity="0.6" />
+                                       <circle cx="120" cy="55" r="5" fill="var(--accent)" />
+                                       <path d="M 105 70 Q 110 60 112 62 Q 115 50 120 70 Q 125 50 128 62 Q 135 70 135 70" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <rect x="155" y="20" width="55" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                       <text x="182.5" y="30" fill="var(--accent)" fontSize="7" fontWeight="bold" textAnchor="middle">120 FPS</text>
+                                       <text x="182.5" y="42" fill="var(--accent)" fontSize="6" textAnchor="middle" opacity="0.7">HIGH SPEED</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Surreal Reflection' && (
+                                     <>
+                                       <path d="M 70 45 L 95 20 L 120 45 L 145 25 L 170 45" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <line x1="40" y1="45" x2="200" y2="45" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                                       <path d="M 70 45 Q 80 58 95 70 Q 110 58 120 45 Q 130 58 145 65 Q 160 58 170 45" fill="none" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 2" opacity="0.7" />
+                                       <path d="M 50 52 H 190 M 65 60 H 175 M 80 68 H 160" fill="none" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1" />
+                                     </>
+                                   )}
+
+                                   {item.en === 'Double Exposure' && (
+                                     <>
+                                       <path d="M 70 75 C 70 55, 85 45, 90 40 C 85 35, 85 20, 100 20 C 115 20, 120 30, 120 45 C 120 55, 125 65, 130 75" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 50 60 L 80 40 L 110 65 L 140 35 L 190 70" fill="none" stroke="rgba(255, 255, 255, 0.4)" strokeWidth="1.5" />
+                                       <path d="M 60 70 L 95 50 L 130 70 L 160 55" fill="none" stroke="rgba(255, 255, 255, 0.25)" strokeWidth="1" strokeDasharray="2 2" />
+                                       <text x="175" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">EXPOSURE A</text>
+                                       <text x="175" y="44" fill="rgba(255,255,255,0.4)" fontSize="8">EXPOSURE B</text>
+                                       <circle cx="165" cy="29" r="3" fill="var(--accent)" />
+                                       <circle cx="165" cy="41" r="3" fill="rgba(255,255,255,0.4)" />
+                                     </>
+                                   )}
+
+                                   {item.en === 'Dramatic Silhouette' && (
+                                     <>
+                                       <circle cx="120" cy="45" r="25" fill="none" stroke="rgba(212, 160, 32, 0.15)" strokeWidth="1" />
+                                       <line x1="120" y1="45" x2="70" y2="15" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1.5" />
+                                       <line x1="120" y1="45" x2="170" y2="15" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1.5" />
+                                       <line x1="120" y1="45" x2="60" y2="45" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1.5" />
+                                       <line x1="120" y1="45" x2="180" y2="45" stroke="rgba(212, 160, 32, 0.2)" strokeWidth="1.5" />
+                                       <path d="M 100 75 C 100 60, 110 55, 120 55 C 130 55, 140 60, 140 75 Z" fill="#070709" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <circle cx="120" cy="40" r="10" fill="#070709" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <rect x="25" y="25" width="45" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                       <text x="47.5" y="35" fill="var(--accent)" fontSize="7" fontWeight="bold" textAnchor="middle">BACKLIT</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Long Exposure' && (
+                                     <>
+                                       <path d="M 20 70 L 220 70" stroke="rgba(255,255,255,0.1)" strokeWidth="1.5" />
+                                       <path d="M 20 50 Q 70 30 120 55 T 220 35" fill="none" stroke="var(--accent)" strokeWidth="3.5" strokeLinecap="round" opacity="0.8" />
+                                       <path d="M 20 50 Q 70 30 120 55 T 220 35" fill="none" stroke="#ffffff" strokeWidth="1" strokeLinecap="round" />
+                                       <path d="M 20 62 Q 80 45 140 65 T 220 50" fill="none" stroke="rgba(212, 160, 32, 0.5)" strokeWidth="2" strokeLinecap="round" />
+                                       <rect x="155" y="15" width="55" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                       <text x="182.5" y="25" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">BULB</text>
+                                       <text x="182.5" y="37" fill="var(--accent)" fontSize="6" textAnchor="middle" opacity="0.7">SLOW SHUTTER</text>
+                                     </>
+                                   )}
+                                   {item.en === 'Cooke S4/i Prime' && (
+                                     <>
+                                       <path d="M 60 20 H 130 V 70 H 60 Z" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                                       <path d="M 75 25 Q 85 45 75 65" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <path d="M 105 25 Q 95 45 105 65" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <path d="M 30 30 L 77 35 Q 90 45 120 45 L 180 45" fill="none" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                       <path d="M 30 60 L 77 55 Q 90 45 120 45 L 180 45" fill="none" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                       <text x="180" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">COOKE LOOK</text>
+                                       <text x="180" y="44" fill="rgba(255,255,255,0.4)" fontSize="7">WARM SKIN</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Vintage Anamorphic' && (
+                                     <>
+                                       <line x1="20" y1="45" x2="220" y2="45" stroke="rgba(100, 180, 255, 0.7)" strokeWidth="2.5" />
+                                       <line x1="20" y1="45" x2="220" y2="45" stroke="#ffffff" strokeWidth="1" />
+                                       <ellipse cx="80" cy="45" rx="8" ry="14" fill="none" stroke="rgba(100, 180, 255, 0.3)" strokeWidth="1.5" />
+                                       <ellipse cx="140" cy="45" rx="10" ry="18" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <ellipse cx="180" cy="45" rx="6" ry="11" fill="none" stroke="rgba(100, 180, 255, 0.2)" strokeWidth="1.5" />
+                                       <rect x="25" y="20" width="45" height="15" rx="3" fill="none" stroke="rgba(100, 180, 255, 0.4)" />
+                                       <text x="47.5" y="30" fill="rgba(100, 180, 255, 0.9)" fontSize="7" fontWeight="bold" textAnchor="middle">ANAMORPHIC</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Pristine Cinema Glass' && (
+                                     <>
+                                       <line x1="30" y1="25" x2="160" y2="25" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <line x1="30" y1="65" x2="160" y2="65" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <path d="M 30 45 H 170" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 170 45 L 210 25 M 170 45 L 210 65" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 2" />
+                                       <circle cx="170" cy="45" r="3" fill="var(--accent)" />
+                                       <rect x="60" y="20" width="80" height="50" rx="4" fill="none" stroke="var(--accent)" strokeWidth="1.5" opacity="0.3" />
+                                       <line x1="100" y1="20" x2="100" y2="70" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <text x="180" y="18" fill="var(--accent)" fontSize="8" fontWeight="bold">0% ABERR</text>
+                                       <text x="180" y="78" fill="rgba(255,255,255,0.4)" fontSize="7">ULTRA SHARP</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Peripheral Framing' && (
+                                     <>
+                                       <path d="M 15 10 C 45 20, 40 50, 15 80 Z" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 225 10 C 195 20, 200 50, 225 80 Z" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 15 10 Q 120 25 225 10" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" strokeDasharray="4 4" />
+                                       <circle cx="120" cy="48" r="8" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 110 70 C 110 60, 130 60, 130 70 Z" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <path d="M 35 45 L 90 45 M 205 45 L 150 45" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1" strokeDasharray="2 2" />
+                                     </>
+                                   )}
+
+                                   {item.en === 'Architectural Cohesion' && (
+                                     <>
+                                       <line x1="20" y1="15" x2="120" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="220" y1="15" x2="120" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="20" y1="75" x2="120" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="220" y1="75" x2="120" y2="45" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="60" y1="27" x2="60" y2="63" stroke="var(--accent)" strokeWidth="2" />
+                                       <line x1="180" y1="27" x2="180" y2="63" stroke="var(--accent)" strokeWidth="2" />
+                                       <line x1="90" y1="36" x2="90" y2="54" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6" />
+                                       <line x1="150" y1="36" x2="150" y2="54" stroke="var(--accent)" strokeWidth="1.5" opacity="0.6" />
+                                       <circle cx="120" cy="45" r="3" fill="var(--accent)" />
+                                       <text x="120" y="22" fill="var(--accent)" fontSize="7" fontWeight="bold" textAnchor="middle">VANISHING POINT</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Unconventional Cinematography' && (
+                                     <>
+                                       <rect x="50" y="20" width="140" height="50" rx="3" fill="none" stroke="var(--accent)" strokeWidth="2" transform="rotate(-15 120 45)" />
+                                       <line x1="25" y1="45" x2="215" y2="45" stroke="rgba(255,255,255,0.2)" strokeWidth="1" strokeDasharray="4 4" />
+                                       <path d="M 190 20 A 40 40 0 0 1 205 50" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <path d="M 201 46 L 205 50 L 209 43" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <text x="175" y="76" fill="var(--accent)" fontSize="8" fontWeight="bold">DUTCH TILT</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Kodak 35mm Analog Film' && (
+                                     <>
+                                       <rect x="25" y="15" width="190" height="60" rx="2" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <line x1="25" y1="25" x2="215" y2="25" stroke="rgba(212, 160, 32, 0.3)" strokeWidth="1" />
+                                       <line x1="25" y1="65" x2="215" y2="65" stroke="rgba(212, 160, 32, 0.3)" strokeWidth="1" />
+                                       <rect x="35" y="17" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="75" y="17" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="115" y="17" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="155" y="17" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="195" y="17" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="35" y="68" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="75" y="68" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="115" y="68" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="155" y="68" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="195" y="68" width="8" height="5" rx="1" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <text x="120" y="49" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">KODAK 35MM</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Bleach Bypass' && (
+                                     <>
+                                       <line x1="60" y1="75" x2="60" y2="15" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="60" y1="75" x2="180" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <path d="M 60 75 Q 110 75 120 45 T 180 15" fill="none" stroke="var(--accent)" strokeWidth="3" />
+                                       <path d="M 60 75 Q 110 75 120 45 T 180 15" fill="none" stroke="#ffffff" strokeWidth="1" />
+                                       <text x="135" y="35" fill="var(--accent)" fontSize="8" fontWeight="bold">BLEACH</text>
+                                       <text x="135" y="47" fill="rgba(255,255,255,0.4)" fontSize="7">HIGH CONTRAST</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Gritty Realism' && (
+                                     <>
+                                       <circle cx="120" cy="35" r="10" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <path d="M 115 44 H 125 M 117 48 H 123" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <path d="M 120 48 L 120 75" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                       <circle cx="50" cy="30" r="1" fill="rgba(255,255,255,0.4)" />
+                                       <circle cx="70" cy="60" r="1.5" fill="rgba(255,255,255,0.4)" />
+                                       <circle cx="170" cy="25" r="1.2" fill="rgba(255,255,255,0.4)" />
+                                       <circle cx="185" cy="55" r="1" fill="rgba(255,255,255,0.4)" />
+                                       <text x="35" y="25" fill="var(--accent)" fontSize="8" fontWeight="bold">RAW</text>
+                                       <text x="35" y="37" fill="rgba(255,255,255,0.4)" fontSize="7">PRACTICAL</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'ARRI Alexa LF' && (
+                                     <>
+                                       <rect x="75" y="20" width="90" height="50" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="85" y="26" width="70" height="38" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <line x1="85" y1="45" x2="155" y2="45" stroke="var(--accent)" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.5" />
+                                       <line x1="120" y1="26" x2="120" y2="64" stroke="var(--accent)" strokeWidth="0.8" strokeDasharray="4 4" opacity="0.5" />
+                                       <text x="35" y="30" fill="var(--accent)" fontSize="8" fontWeight="bold">ARRI</text>
+                                       <text x="35" y="42" fill="rgba(255,255,255,0.4)" fontSize="7">ALEXA LF</text>
+                                       <text x="180" y="30" fill="var(--accent)" fontSize="8" fontWeight="bold">4.5K</text>
+                                       <text x="180" y="42" fill="rgba(255,255,255,0.4)" fontSize="7">L-FORMAT</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Sony VENICE 2 (Modifier)' && (
+                                     <>
+                                       <rect x="75" y="20" width="90" height="50" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="85" y="26" width="70" height="38" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <rect x="25" y="20" width="45" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                       <text x="47.5" y="30" fill="var(--accent)" fontSize="7" fontWeight="bold" textAnchor="middle">ISO 800</text>
+                                       <rect x="25" y="40" width="45" height="15" rx="3" fill="none" stroke="rgba(212, 160, 32, 0.3)" />
+                                       <text x="47.5" y="50" fill="var(--accent)" fontSize="7" fontWeight="bold" textAnchor="middle">ISO 3200</text>
+                                       <text x="180" y="30" fill="var(--accent)" fontSize="8" fontWeight="bold">SONY</text>
+                                       <text x="180" y="42" fill="rgba(255,255,255,0.4)" fontSize="7">VENICE 2</text>
+                                     </>
+                                   )}
+                                   {item.en === 'ARRI Alexa 35' && (
+                                     <>
+                                       <path d="M 50 25 H 130 V 65 H 50 Z" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="1.5" />
+                                       <rect x="80" y="30" width="60" height="30" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <path d="M 30 45 H 75" stroke="var(--accent)" strokeWidth="1.5" strokeDasharray="3 3" />
+                                       <circle cx="30" cy="45" r="3" fill="var(--accent)" />
+                                       <text x="180" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">ALEXA 35</text>
+                                       <text x="180" y="44" fill="rgba(255,255,255,0.4)" fontSize="7">17 STOPS DR</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'ARRI Alexa Mini LF' && (
+                                     <>
+                                       <path d="M 50 25 H 120 V 65 H 50 Z" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="75" y="27" width="75" height="36" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <text x="180" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">MINI LF</text>
+                                       <text x="180" y="44" fill="rgba(255,255,255,0.4)" fontSize="7">LARGE FORMAT</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Sony VENICE 2' && (
+                                     <>
+                                       <rect x="70" y="22" width="100" height="46" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="80" y="27" width="80" height="36" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <text x="35" y="30" fill="var(--accent)" fontSize="8" fontWeight="bold">SONY</text>
+                                       <text x="35" y="42" fill="rgba(255,255,255,0.4)" fontSize="7">8.6K FF</text>
+                                       <text x="180" y="30" fill="var(--accent)" fontSize="8" fontWeight="bold">DUAL ISO</text>
+                                       <text x="180" y="42" fill="rgba(255,255,255,0.4)" fontSize="7">800/3200</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'RED V-RAPTOR' && (
+                                     <>
+                                       <path d="M 60 25 L 115 20 V 70 L 60 65 Z" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="85" y="30" width="55" height="30" rx="1.5" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <line x1="30" y1="35" x2="55" y2="35" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <line x1="25" y1="45" x2="55" y2="45" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <line x1="30" y1="55" x2="55" y2="55" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <text x="175" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">RED 8K</text>
+                                       <text x="175" y="44" fill="rgba(255,255,255,0.4)" fontSize="7">V-RAPTOR</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Blackmagic URSA Cinema' && (
+                                     <>
+                                       <rect x="65" y="20" width="110" height="50" rx="3" fill="none" stroke="rgba(255,255,255,0.15)" strokeWidth="1.5" />
+                                       <rect x="80" y="25" width="80" height="40" rx="2" fill="none" stroke="var(--accent)" strokeWidth="2.5" />
+                                       <line x1="106" y1="25" x2="106" y2="65" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1" strokeDasharray="2 2" />
+                                       <line x1="133" y1="25" x2="133" y2="65" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1" strokeDasharray="2 2" />
+                                       <line x1="80" y1="45" x2="160" y2="45" stroke="rgba(212, 160, 32, 0.4)" strokeWidth="1" strokeDasharray="2 2" />
+                                       <text x="35" y="32" fill="var(--accent)" fontSize="8" fontWeight="bold">URSA</text>
+                                       <text x="35" y="44" fill="rgba(255,255,255,0.4)" fontSize="7">12K INDIE</text>
+                                     </>
+                                   )}
+
+                                   {item.en === '35mm Film' && (
+                                     <>
+                                       <rect x="35" y="15" width="170" height="60" rx="2" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <rect x="45" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="90" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="135" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="180" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="45" y="68" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="90" y="68" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="135" y="68" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="180" y="68" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <line x1="75" y1="15" x2="75" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="165" y1="15" x2="165" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <text x="120" y="47" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">ANALOG 35MM</text>
+                                     </>
+                                   )}
+
+                                   {item.en === '16mm Film' && (
+                                     <>
+                                       <rect x="45" y="15" width="150" height="60" rx="1.5" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <rect x="55" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="105" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="155" y="18" width="6" height="4" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <line x1="90" y1="15" x2="90" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="140" y1="15" x2="140" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <text x="120" y="47" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">INDIE 16MM</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'IMAX 70mm' && (
+                                     <>
+                                       <rect x="25" y="12" width="190" height="66" rx="3" fill="none" stroke="var(--accent)" strokeWidth="2" />
+                                       <rect x="29" y="18" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="29" y="30" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="29" y="42" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="29" y="54" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="207" y="18" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="207" y="30" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="207" y="42" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="207" y="54" width="4" height="6" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <text x="120" y="47" fill="var(--accent)" fontSize="9" fontWeight="800" textAnchor="middle" letterSpacing="1">IMAX 70MM</text>
+                                     </>
+                                   )}
+
+                                   {item.en === 'Super 8 Film' && (
+                                     <>
+                                       <rect x="55" y="15" width="130" height="60" rx="1.5" fill="none" stroke="var(--accent)" strokeWidth="1.5" />
+                                       <rect x="62" y="22" width="4" height="5" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="62" y="42" width="4" height="5" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <rect x="62" y="62" width="4" height="5" rx="0.5" fill="none" stroke="var(--accent)" strokeWidth="1" />
+                                       <line x1="80" y1="15" x2="80" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <line x1="140" y1="15" x2="140" y2="75" stroke="rgba(255,255,255,0.15)" strokeWidth="1" />
+                                       <text x="125" y="47" fill="var(--accent)" fontSize="8" fontWeight="bold" textAnchor="middle">SUPER 8</text>
+                                     </>
+                                   )}
+
+
+
                                 </svg>
                               </div>
                             )}

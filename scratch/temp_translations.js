@@ -1,6 +1,6 @@
 // TURA v14 — Localization Dictionary (AR, EN, FR, ES, KO, ZH)
 
-export const UI_TRANSLATIONS: Record<string, Record<string, string | Record<string, string>>> = {
+const UI_TRANSLATIONS = {
   build: {
     ar: 'البناء',
     en: 'Build',
@@ -746,7 +746,7 @@ export const UI_TRANSLATIONS: Record<string, Record<string, string | Record<stri
   }
 };
 
-export const SECTION_TRANSLATIONS: Record<string, { name: Record<string, string>; tooltip: Record<string, string> }> = {
+const SECTION_TRANSLATIONS = {
   camera: {
     name: { ar: 'الكاميرا', en: 'Camera', fr: 'Caméra', es: 'Cámara', ko: '카메라', zh: '相机' },
     tooltip: {
@@ -870,7 +870,7 @@ export const SECTION_TRANSLATIONS: Record<string, { name: Record<string, string>
   }
 };
 
-export const GROUP_TRANSLATIONS: Record<string, { name: Record<string, string>; tooltip: Record<string, string> }> = {
+const GROUP_TRANSLATIONS = {
   camera_body: {
     name: { ar: 'جسم الكاميرا', en: 'Camera Body', fr: 'Boîtier', es: 'Cuerpo de cámara', ko: '카메라 바디', zh: '相机机身' },
     tooltip: {
@@ -1111,11 +1111,7 @@ export const GROUP_TRANSLATIONS: Record<string, { name: Record<string, string>; 
   }
 };
 
-export const ITEM_TRANSLATIONS: Record<string, {
-  name: Record<string, string>;
-  desc?: Record<string, string>;
-  tooltip?: Record<string, string>;
-}> = {
+const ITEM_TRANSLATIONS = {
   'Spotlight / High Key Drama': {
     "name": {
       "ar": "بقعة ضوء درامية (Spotlight)",
@@ -3637,7 +3633,7 @@ export const ITEM_TRANSLATIONS: Record<string, {
   }
 };
 
-export const PLATFORM_TRANSLATIONS: Record<string, { name: Record<string, string>; tooltip: Record<string, string> }> = {
+const PLATFORM_TRANSLATIONS = {
   'kling3': {
     name: { ar: 'Kling 3.0', en: 'Kling 3.0', fr: 'Kling 3.0', es: 'Kling 3.0', ko: 'Kling 3.0', zh: '快手可灵 3.0' },
     tooltip: {
@@ -3706,7 +3702,7 @@ export const PLATFORM_TRANSLATIONS: Record<string, { name: Record<string, string
   }
 };
 
-export const CONFLICT_TRANSLATIONS: Record<string, Record<string, string>> = {
+const CONFLICT_TRANSLATIONS = {
   'IMAX too heavy for handheld': {
     ar: '⚠ IMAX ثقيل جداً للتصوير اليدوي',
     en: '⚠ IMAX too heavy for handheld',
@@ -3732,3 +3728,5 @@ export const CONFLICT_TRANSLATIONS: Record<string, Record<string, string>> = {
     zh: '⚠ f/1.4 大光圈不适合用于大范围远景建立镜头'
   }
 };
+
+module.exports = { UI_TRANSLATIONS, SECTION_TRANSLATIONS, ITEM_TRANSLATIONS, GROUP_TRANSLATIONS };

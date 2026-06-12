@@ -1,0 +1,234 @@
+{
+  "Sony VENICE 2": {
+    "ar": "Sony VENICE 2",
+    "en": "Sony VENICE 2",
+    "descAr": "فول فريم سوني",
+    "descEn": "Full frame Sony",
+    "tooltipAr": "كاميرا سوني الاحترافية بمستشعر الفريم الكامل 8.6K. تبرع في مشاهد الإضاءة المنخفضة بأداء مذهل وخلفيات نظيفة تماماً. استُخدمت في مسلسلات وأفلام Netflix الكبرى.",
+    "tooltipEn": "Sony's flagship cinema camera with full-frame 8.6K. Excels in low-light with clean shadows and dual base ISO — heavily used in premium Netflix productions."
+  },
+  "Low-Key Noir": {
+    "ar": "إضاءة خافتة (Low Key)",
+    "en": "Low-Key Noir",
+    "descAr": "ظلال معتمة عميقة",
+    "descEn": "Moody shadow dominant",
+    "tooltipAr": "إضاءة سينمائية خافتة بنسبة تباين عالية جداً تركز على الظلال والغموض، مستوحاة من كلاسيكيات أفلام النوار البوليسية.",
+    "tooltipEn": "Moody low-key illumination with dominant deep shadows, high contrast, and dark mystery. Inspired by classic police noir films."
+  },
+  "High-Key Studio": {
+    "ar": "إضاءة ساطعة (High Key)",
+    "en": "High-Key Studio",
+    "descAr": "إضاءة ساطعة متوازنة",
+    "descEn": "Bright even studio light",
+    "tooltipAr": "توزيع إضاءة ساطع ومتوازن يقلل الظلال القاسية بالكامل ليعطي شعوراً بالتفاؤل والوضوح والدقة العالية، مثل الإعلانات واللقطات الحيوية.",
+    "tooltipEn": "Bright, soft, and highly balanced lighting setup minimizing shadows. Creates an upbeat, clear, and highly detailed visual aesthetic."
+  },
+  "Rembrandt Portraiture": {
+    "ar": "إضاءة رامبرانت (Rembrandt)",
+    "en": "Rembrandt Portraiture",
+    "descAr": "إضاءة كلاسيكية للوجوه",
+    "descEn": "Classic 45-degree key",
+    "tooltipAr": "تقنية كلاسيكية لتوزيع الضوء بزاوية 45 درجة، تظهر مثلث إضاءة مميزاً على الخد المظلل للشخصية لإضفاء جاذبية وعمق درامي للوجوه.",
+    "tooltipEn": "Classic portrait setup placing key light at 45-degrees. Creates a signature triangle highlight on the shaded cheek for depth."
+  },
+  "Teal & Orange Split": {
+    "ar": "تأثير تيل وأورنج (Teal & Orange)",
+    "en": "Teal & Orange Split",
+    "descAr": "تلوين سينمائي ثنائي",
+    "descEn": "Stylized cyan-amber split",
+    "tooltipAr": "التقسيم اللوني السينمائي الشهير بين التيل البارد والأورانج الدافئ لخلق تباين لوني مذهل وجذاب يعزز ملامح الشخصية وعمق الخلفية.",
+    "tooltipEn": "The iconic cinematic color styling. Uses cold cyan/teal fill lights and warm amber/orange key lights for striking color contrast."
+  },
+  "Candlelit Intimacy": {
+    "ar": "إضاءة الشموع الحميمة",
+    "en": "Candlelit Intimacy",
+    "descAr": "وهج الشموع الدافئ",
+    "descEn": "Warm candlelit ambiance",
+    "tooltipAr": "إضاءة خافتة ناعمة ومتذبذبة من الشموع تمنح المشهد حميمية فائقة ورومانسية هادئة أو طابع الحقب التاريخية القديمة.",
+    "tooltipEn": "Soft, flickering candlelight emitting an ultra-warm glow. Grants extreme intimacy, romance, or classic historical period ambiance."
+  },
+  "Sodium Vapor Streetlights": {
+    "ar": "نور شوارع صوديومي",
+    "en": "Sodium Vapor Streetlights",
+    "descAr": "وهج صوديوم برتقالي للشوارع",
+    "descEn": "Industrial sodium amber",
+    "tooltipAr": "ضوء الشوارع البرتقالي الأحادي المميز للمدن والمطاردات الليلية، يعيد إحياء طابع أفلام التسعينات الحضرية.",
+    "tooltipEn": "Distinct industrial orange/amber monochromatic street lighting, perfect for gritty urban nights and classic 90s thriller aesthetics."
+  },
+  "Mercury Vapor Industrial": {
+    "ar": "بخار الزئبق البارد",
+    "en": "Mercury Vapor Industrial",
+    "descAr": "أزرق مخضر بارد صناعي",
+    "descEn": "Clinical greenish-blue glow",
+    "tooltipAr": "إضاءة باردة وقاسية بلون أخضر مزرق تحاكي أضواء المصانع المهجورة، مراكز الشرطة، أو الأماكن السريرية لتوحي بالتوتر.",
+    "tooltipEn": "Gritty, clinical greenish-blue light setup simulating abandoned warehouses, prisons, or police stations for cold tension."
+  },
+  "Volumetric God Rays": {
+    "ar": "خيوط ضوء حجمية",
+    "en": "Volumetric God Rays",
+    "descAr": "أشعة شمس حجمية مخترقة",
+    "descEn": "Cinematic light beams",
+    "tooltipAr": "حزم ضوئية واضحة ومخترقة للضباب أو النوافذ أو أغصان الأشجار تضفي طابعاً روحانياً وسحرياً على المشهد.",
+    "tooltipEn": "Visible sun shafts or crepuscular light beams cutting through mist, windows, or trees for highly atmospheric, spiritual visuals."
+  },
+  "Flickering Firelight": {
+    "ar": "وهج نار متذبذب",
+    "en": "Flickering Firelight",
+    "descAr": "إضاءة نارية متذبذبة",
+    "descEn": "Dynamic flickering campfire glow",
+    "tooltipAr": "محاكاة إضاءة النار أو موقد التدفئة أو المخيمات بلونها البرتقالي الناري الدافئ وحركتها المستمرة.",
+    "tooltipEn": "Simulates the flickering orange-red warmth of a campfire, fireplace, or furnace, casting dynamic movement and raw warmth."
+  },
+  "Dappled Gobo Moonlight": {
+    "ar": "نور قمر متسلل (Gobo)",
+    "en": "Dappled Gobo Moonlight",
+    "descAr": "ظلال أوراق الشجر منقطة",
+    "descEn": "Leafy textured moonlight",
+    "tooltipAr": "إضاءة ضوء القمر وهي تخترق أوراق الشجر لتخلق ظلالاً منقطة ومتحركة (Dappled Shadows) على الشخصيات والأرض لغموض فائق.",
+    "tooltipEn": "Cold blue moonlit rays filtering through leafy branches, casting intricate textured shadows for mystery and suspense."
+  },
+  "Emergency Strobe Flash": {
+    "ar": "أضواء طوارئ وامضة",
+    "en": "Emergency Strobe Flash",
+    "descAr": "وميض طوارئ شرطي",
+    "descEn": "Flickering red-blue sirens",
+    "tooltipAr": "أضواء سيارات الشرطة أو الطوارئ الوامضة باللونين الأحمر والأزرق المتعاقبين لخلق حالة توتر ومطاردة قصوى.",
+    "tooltipEn": "Flashing red and blue emergency beacon lights casting rhythmic, high-contrast strobe patterns across the frame. Driving high tension."
+  },
+  "Bioluminescent Glow": {
+    "ar": "توهج حيوي سحري",
+    "en": "Bioluminescent Glow",
+    "descAr": "إضاءة مشعة طبيعياً",
+    "descEn": "Magical cyan glowing organic",
+    "tooltipAr": "ضوء ينبعث من كائنات أو نباتات أو مياه مشعة طبيعياً (مثل أجواء فيلم Avatar) لتأثير خيالي ساحر.",
+    "tooltipEn": "Magical cyan-blue light emitting from glowing plants, water, or organic life. Imbues scenes with ethereal sci-fi fantasy."
+  },
+  "Urban Sodium & Cyan Contrast": {
+    "ar": "تباين صوديوم وتيل مدني",
+    "en": "Urban Sodium & Cyan Contrast",
+    "descAr": "تباين لوني مدني برتقالي وأزرق",
+    "descEn": "Amber-cyan urban split",
+    "tooltipAr": "التباين المدني البوليسي الشهير؛ دمج إضاءة الشارع الصوديومية البرتقالية مع الإضاءة الزرقاء الباردة للمباني والنوافذ.",
+    "tooltipEn": "The iconic neo-noir city contrast. Combines industrial amber-orange streetlights with cool cyan building/window lights."
+  },
+  "Handheld Flashlight Beam": {
+    "ar": "كشاف يدوي مركز",
+    "en": "Handheld Flashlight Beam",
+    "descAr": "شعاع بحث ضيق",
+    "descEn": "Suspenseful flashlight cone",
+    "tooltipAr": "شعاع ضوئي ضيق من كشاف يدوي يخترق الظلام الدامس، لخلق حالة بحث أو رعب وإثارة.",
+    "tooltipEn": "A narrow, focused cone of light from a handheld flashlight cutting through pitch darkness, highlighting volumetric dust particles."
+  },
+  "Motivated TV Glow": {
+    "ar": "وهج شاشة تلفزيون",
+    "en": "Motivated TV Glow",
+    "descAr": "ضوء أزرق متذبذب خافت",
+    "descEn": "Flickering blue screen reflection",
+    "tooltipAr": "يحاكي الضوء البارد والمنعكس من شاشة تلفزيون تعمل في غرفة مظلمة على وجه الشخصية، ليعبر عن العزلة والتوتر.",
+    "tooltipEn": "Simulates the cold, blue, rhythmic flickering light cast by an active off-screen TV in a dark room. Conveying isolation."
+  },
+  "Golden Rim Light Glow": {
+    "ar": "هالة الساعة الذهبية",
+    "en": "Golden Rim Light Glow",
+    "descAr": "تحديد ذهبي للحواف",
+    "descEn": "Warm backlit rim halo",
+    "tooltipAr": "تحديد حواف الشخصية بهالة ضوئية ذهبية متوهجة من الخلف بينما يظل وجهها في شبه ظل، لمظهر شاعري ملحمي.",
+    "tooltipEn": "Intense golden backlighting framing the subject's outline with a glowing halo, leaving the foreground in stylized soft shadow."
+  },
+  "Monochrome Pure Silhouette": {
+    "ar": "سيلويت أحادي خالص",
+    "en": "Monochrome Pure Silhouette",
+    "descAr": "ظل أسود خالص",
+    "descEn": "Solid black figure outline",
+    "tooltipAr": "إضاءة خلفية كاملة بنسبة 100% وبدون أي ضوء أمامي، مما يحول الشخصية إلى ظل أسود خالص محدد الملامح.",
+    "tooltipEn": "Stark 100% backlight with zero front fill. Transforms the subject into a solid black graphical silhouette against a bright background."
+  },
+  "Overcast Flat Diffusion": {
+    "ar": "غيوم كثيفة محايدة",
+    "en": "Overcast Flat Diffusion",
+    "descAr": "رمادي ناعم بدون ظلال",
+    "descEn": "Gloomy gray flat lighting",
+    "tooltipAr": "ضوء منتشر بالكامل من سماء ملبدة بالغيوم دون ظلال واضحة على الإطلاق، يعطي طابعاً كئيباً أو واقعياً بارداً جداً.",
+    "tooltipEn": "Soft, heavily diffused light from a fully overcast sky. Eliminates harsh shadows, producing a gloomy, melancholic realistic atmosphere."
+  },
+  "Time-Lapse": {
+    "ar": "حركة سريعة (Time-lapse)",
+    "en": "Time-Lapse",
+    "descAr": "مرور الوقت السريع",
+    "descEn": "Time-lapse motion",
+    "tooltipAr": "تسجيل اللقطات بفواصل زمنية واسعة لعرض حركة النجوم، الغيوم، أو زحام المدينة بشكل متسارع وسلس في آن واحد. يجسد مرور الزمن السريع بشكل شاعري.",
+    "tooltipEn": "Captures frames at wide intervals to compress hours into seconds — perfect for showing movement of stars, clouds, or city crowds in a smooth, accelerated flow."
+  },
+  "Slow Motion": {
+    "ar": "حركة بطيئة (Slow Motion)",
+    "en": "Slow Motion",
+    "descAr": "تفاصيل بطيئة",
+    "descEn": "High speed slow-mo",
+    "tooltipAr": "التصوير بسرعات إطارات عالية جداً لالتقاط التفاصيل واللحظات المتناهية السرعة التي لا تراها العين. مثالية لقطرات المطر، تحطم الزجاج، وحركات القتال الملحمية.",
+    "tooltipEn": "High-speed capture that slows dynamic events down to reveal details invisible to the naked eye — rain droplets, glass shattering, or epic action sequences."
+  },
+  "Surreal Reflection": {
+    "ar": "انعكاس مرآة سريالي",
+    "en": "Surreal Reflection",
+    "descAr": "انعكاس سريالي حالم",
+    "descEn": "Dreamy reflection symmetry",
+    "tooltipAr": "يخلق انعكاسات مائية أو مرآتية سريالية تدمج وتكرر المشهد بطريقة حالمة ومحيرة للبصر.",
+    "tooltipEn": "Generates dreamlike water or mirror reflections to split or distort reality artistically."
+  },
+  "Double Exposure": {
+    "ar": "تعريض مزدوج (Double Exposure)",
+    "en": "Double Exposure",
+    "descAr": "دمج صورتين متداخلتين",
+    "descEn": "Double exposure blend",
+    "tooltipAr": "تقنية دمج صورتين مختلفتين في كادر واحد لتبدوان متداخلتين بشكل سريالي فني. طريقة رائعة للتعبير عن الأفكار والمشاعر المعقدة والمزاج النفسي.",
+    "tooltipEn": "Visual technique blending two distinct images into one frame — ideal for poetic storytelling, psychological concepts, and artistic visual metaphors."
+  },
+  "Dramatic Silhouette": {
+    "ar": "سيلويت درامي (Silhouette)",
+    "en": "Dramatic Silhouette",
+    "descAr": "سيلويت أسود مظلم",
+    "descEn": "Imposing silhouette",
+    "tooltipAr": "وضع مصدر الضوء القوي خلف الموضوع مباشرة، ليتحول الموضوع إلى ظل أسود غامض بدون تفاصيل واضحة. يمنح الصورة هيبة ملحمية وغموضاً فائق الجاذبية.",
+    "tooltipEn": "Strong backlighting outlining the subject as a dark shadow silhouette — creates dramatic mystery, heroic outlines, and highly graphic compositions."
+  },
+  "Long Exposure": {
+    "ar": "تعريض طويل (Long Exposure)",
+    "en": "Long Exposure",
+    "descAr": "مسارات ضوئية ناعمة",
+    "descEn": "Smooth light trails",
+    "tooltipAr": "إبقاء الشاتر مفتوحاً لفترة طويلة لتنعيم المياه الجارية أو إظهار حركة أضواء السيارات كخطوط ناصعة وناعمة. تعطي الصورة إحساساً بالحركة الحالمة والزمن المستمر.",
+    "tooltipEn": "Keeps the shutter open to smooth flowing water or render car headlights as continuous glowing streaks — conveys dreamlike movement and the passage of time."
+  },
+  "2.39:1 Cinemascope": {
+    "ar": "2.39:1 سينما عريضة",
+    "en": "2.39:1 Cinemascope",
+    "descAr": "كادر سينمائي عريض جداً",
+    "descEn": "Cinemascope format",
+    "tooltipAr": "أعرض كادر سينمائي مستخدم في الأفلام الكبرى والملحمية. يمنح شعوراً رائعاً بالاتساع الجغرافي والبعد البصري المهيب. الأسلوب المعتاد للأفلام ذات الطابع الملحمي البصري.",
+    "tooltipEn": "The widest standard theatrical ratio for sweeping epics and blockbusters — creates expansive environmental grandeur and premium theatrical presence."
+  },
+  "4:3 Academy Format": {
+    "ar": "4:3 تلفزيون قديم",
+    "en": "4:3 Academy Format",
+    "descAr": "تأطير كلاسيكي مربع تقريباً",
+    "descEn": "Vintage Academy ratio",
+    "tooltipAr": "النسبة الكلاسيكية للسينما القديمة وشاشات التلفزيون القديمة. تمنح المشهد حميمية خاصة وتركيزاً كبيراً على وجوه الشخصيات. شائعة حالياً لإحياء طابع ريترو أو حنين حزين.",
+    "tooltipEn": "The vintage aspect ratio of early Hollywood and classic televisions — creates a sense of nostalgia, intimacy, and focuses attention heavily on characters."
+  },
+  "Vintage Anamorphic": {
+    "ar": "عدسات أنامورفيك كلاسيكية",
+    "en": "Vintage Anamorphic",
+    "descAr": "تشويه بيضاوي عتيق وفلير قوي",
+    "descEn": "Heavy anamorphic look",
+    "tooltipAr": "محاكاة لعدسات أنامورفيك قديمة من السبعينيات. توهج ضوئي أزرق قوي جداً، تشويه بيضاوي واضح عند الأطراف، وعمق بؤري ضيق وحالم. رائعة لأفلام الخيال العلمي الكلاسيكية.",
+    "tooltipEn": "Emulates vintage 1970s anamorphic glass with strong blue streak flares, heavy oval distortion on edges, and a dreamy fall-off — perfect for retro sci-fi aesthetics."
+  },
+  "Pristine Cinema Glass": {
+    "ar": "زجاج سينمائي نقي",
+    "en": "Pristine Cinema Glass",
+    "descAr": "دقة فائقة بدون أي انحراف بصري",
+    "descEn": "Ultra clean glass",
+    "tooltipAr": "عدسات حديثة ممتازة خالية من أي انحراف لوني أو بصري. تمنح الذكاء الاصطناعي أمراً بالتزام أقصى حدة ممكنة ونقاء تام للألوان، ومثالية لمشاريع الإعلانات والمقاطع التجارية الفاخرة.",
+    "tooltipEn": "Pristine modern lenses with zero chromatic aberrations. Directs AI to render with maximum sharpness and ultra-clean colors — ideal for commercial advertising and ultra-modern content."
+  }
+}
