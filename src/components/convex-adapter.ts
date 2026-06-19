@@ -1,7 +1,4 @@
-import { ConvexReactClient } from "convex/react";
 import { Adapter } from "next-auth/adapters";
-
-const convex = new ConvexReactClient(process.env.NEXT_PUBLIC_CONVEX_URL || "https://placeholder-url.convex.cloud");
 
 export const ConvexAdapter: Adapter = {
   async createUser(user) {
