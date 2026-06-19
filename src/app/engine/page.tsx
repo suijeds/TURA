@@ -1,6 +1,7 @@
 'use client';
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import React, { useState, useEffect, useRef } from 'react';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
@@ -958,6 +959,20 @@ export default function EnginePage() {
 
         {/* Separator to push the settings hamburger button to the far left side */}
         <div className="topbar-sep" />
+
+        {/* User auth controls */}
+        <div className="auth-controls" style={{ display: 'flex', alignItems: 'center', gap: '8px', marginLeft: '8px', marginRight: '8px' }}>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <button className="tb-btn" style={{ padding: '6px 14px', borderRadius: '20px', fontSize: '0.8rem', background: 'var(--accent)', color: '#000', fontWeight: 'bold', border: 'none', cursor: 'pointer' }}>
+                {l === 'ar' ? 'تسجيل الدخول' : 'Sign In'}
+              </button>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
+        </div>
 
         {/* Settings Hamburger Dropdown Container */}
         <div className="settings-dropdown-container" ref={settingsRef}>

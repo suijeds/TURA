@@ -2,6 +2,7 @@
 export const runtime = 'edge';
 // Cloudflare Pages nodejs_compat trigger comment
 import React, { useState, useEffect } from 'react';
+import { SignInButton, SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 import Link from 'next/link';
 
 export default function LandingPage() {
@@ -60,10 +61,20 @@ export default function LandingPage() {
           <span className="logo-dot"></span>
           TURA v14
         </div>
-        <div className="nav-links">
+        <div className="nav-links" style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
           <span className="nav-link" onClick={() => window.location.href = '/engine'}>
             {isAr ? 'المحرك' : 'Engine'}
           </span>
+          <SignedOut>
+            <SignInButton mode="modal">
+              <span className="nav-link" style={{ cursor: 'pointer' }}>
+                {isAr ? 'تسجيل الدخول' : 'Sign In'}
+              </span>
+            </SignInButton>
+          </SignedOut>
+          <SignedIn>
+            <UserButton />
+          </SignedIn>
           <span className="nav-link" onClick={toggleLang}>
             {isAr ? 'English' : 'العربية'}
           </span>
