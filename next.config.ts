@@ -9,7 +9,8 @@ const nextConfig: NextConfig = {
     return [
       {
         source: '/api/__clerk/:path*',
-        destination: 'https://smart-jawfish-6.clrk.accounts.dev/v1/:path*',
+        // Enforce secure HTTPS connection to prevent SSL Handshake (Error 525)
+        destination: "https://smart-jawfish-6.clrk.accounts.dev/v1/:path*",
       },
     ];
   },
