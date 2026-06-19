@@ -1,4 +1,5 @@
 'use client';
+export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
