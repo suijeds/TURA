@@ -5,6 +5,14 @@ const nextConfig: NextConfig = {
   images: {
     domains: ['clerk.accounts.dev'],
   },
+  async rewrites() {
+    return [
+      {
+        source: '/api/__clerk/:path*',
+        destination: 'https://smart-jawfish-6.clrk.accounts.dev/v1/:path*',
+      },
+    ];
+  },
 };
 
 export default nextConfig;
