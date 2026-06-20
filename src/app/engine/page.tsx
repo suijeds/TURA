@@ -2,6 +2,7 @@
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
+import { useSession, signOut } from 'next-auth/react';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
@@ -197,6 +198,10 @@ export default function EnginePage() {
   const [settingsLangOpen, setSettingsLangOpen] = useState(false);
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
+  
+  const { data: session } = useSession();
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const userMenuRef = useRef<HTMLDivElement>(null);
 
   // Cinema Assistant states
   const [chatInput, setChatInput] = useState('');
@@ -546,6 +551,9 @@ export default function EnginePage() {
       if (settingsRef.current && !settingsRef.current.contains(target)) {
         setSettingsOpen(false);
         setSettingsLangOpen(false);
+      }
+      if (userMenuRef.current && !userMenuRef.current.contains(target)) {
+        setUserMenuOpen(false);
       }
     };
     
@@ -958,6 +966,64 @@ export default function EnginePage() {
 
         {/* Separator to push the settings hamburger button to the far left side */}
         <div className="topbar-sep" />
+
+        {/* User profile and dropdown */}
+        {session?.user && (
+          <div className="settings-dropdown-container" ref={userMenuRef}>
+            <button 
+              className={`tb-btn user-profile-btn ${userMenuOpen ? 'active' : ''}`} 
+              onClick={() => setUserMenuOpen(!userMenuOpen)} 
+              title={l === 'ar' ? 'الحساب الشخصي' : 'Personal Account'}
+              style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 8px' }}
+            >
+              {session.user.image ? (
+                <img 
+                  src={session.user.image} 
+                  alt={session.user.name || ""} 
+                  style={{ width: '28px', height: '28px', borderRadius: '50%', border: '1.5px solid var(--accent)' }} 
+                />
+              ) : (
+                <div style={{ width: '28px', height: '28px', borderRadius: '50%', background: 'var(--accent-glow)', border: '1.5px solid var(--accent)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.8rem', fontWeight: 'bold', color: 'var(--accent)' }}>
+                  {(session.user.name || 'U').charAt(0).toUpperCase()}
+                </div>
+              )}
+              <span className="desktop-only" style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text2)' }}>
+                {session.user.name}
+              </span>
+            </button>
+            
+            <div className={`settings-dropdown-menu ${userMenuOpen ? 'open' : ''}`} style={{ minWidth: '220px' }}>
+              <div style={{ padding: '8px 12px', borderBottom: '1px solid var(--border)', marginBottom: '4px' }}>
+                <div style={{ fontWeight: 'bold', fontSize: '0.85rem', color: 'var(--text1)' }}>{session.user.name}</div>
+                <div style={{ fontSize: '0.72rem', color: 'var(--text3)', wordBreak: 'break-all' }}>{session.user.email}</div>
+              </div>
+
+              {/* Subscriptions Option */}
+              <div className="settings-menu-item" onClick={() => { setShowPremiumModal(true); setUserMenuOpen(false); }}>
+                <div className="settings-menu-label-wrapper">
+                  <span className="settings-menu-icon" style={{ color: 'var(--accent)' }}>
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/>
+                    </svg>
+                  </span>
+                  <span>{l === 'ar' ? 'الاشتراكات' : 'Subscriptions'}</span>
+                </div>
+              </div>
+
+              {/* Sign Out Option */}
+              <div className="settings-menu-item" onClick={() => signOut()}>
+                <div className="settings-menu-label-wrapper" style={{ color: 'var(--red2, #ef4444)' }}>
+                  <span className="settings-menu-icon">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                      <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+                    </svg>
+                  </span>
+                  <span>{l === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Settings Hamburger Dropdown Container */}
         <div className="settings-dropdown-container" ref={settingsRef}>
