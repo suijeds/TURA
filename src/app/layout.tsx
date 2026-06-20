@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import ConvexClientProvider from "@/components/ConvexClientProvider";
+import SupportWidget from "@/components/SupportWidget";
 
 export const metadata: Metadata = {
   title: "TURA — Cinematic Prompt Engine",
@@ -23,6 +24,7 @@ export default function RootLayout({
       <body>
         <ConvexClientProvider>
           {children}
+          <SupportWidget />
         </ConvexClientProvider>
       </body>
     </html>
