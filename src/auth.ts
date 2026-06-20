@@ -4,6 +4,7 @@ import { ConvexAdapter } from "./components/convex-adapter"
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
   trustHost: true,
+  secret: process.env.AUTH_SECRET,
   providers: [
     Google({
       clientId: process.env.AUTH_GOOGLE_ID,
@@ -11,15 +12,24 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
     }),
   ],
   adapter: ConvexAdapter,
+  session: {
+    strategy: "jwt",
+  },
   pages: {
     signIn: "/auth/signin",
   },
   callbacks: {
-    async session({ session, user }) {
-      if (session.user) {
-        session.user.id = user.id
+    async jwt({ token, user }) {
+      if (user) {
+        token.id = user.id;
       }
-      return session
+      return token;
+    },
+    async session({ session, token }) {
+      if (session.user && token) {
+        session.user.id = token.id as string;
+      }
+      return session;
     },
   },
 })
