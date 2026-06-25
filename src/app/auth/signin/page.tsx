@@ -37,6 +37,19 @@ export default function SignInPage() {
     }
   };
 
+  const handleGoogleSignIn = async () => {
+    setLoading(true);
+    setError('');
+    try {
+      await signIn('google');
+    } catch (err: any) {
+      console.error(err);
+      setError('فشلت تهيئة الدخول بجوجل. يرجى التأكد من تشغيل npx convex deploy وتفعيل مفاتيح Google OAuth.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <div className="signin-container">
       <div className="glow-bg glow-one"></div>
@@ -50,7 +63,8 @@ export default function SignInPage() {
         </div>
 
         <button 
-          onClick={() => signIn('google')}
+          onClick={handleGoogleSignIn}
+          disabled={loading}
           className="btn-google"
         >
           <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
