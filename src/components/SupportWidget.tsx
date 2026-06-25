@@ -1,8 +1,8 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useMutation, useQuery } from "convex/react";
-import { api } from "../../convex/_generated/api";
+import { supabase } from "@/lib/supabase";
+import { User } from "@supabase/supabase-js";
 
 interface Message {
   sender: "user" | "ai" | "system";
@@ -11,7 +11,7 @@ interface Message {
 }
 
 export default function SupportWidget() {
-  const user = useQuery(api.users.viewer);
+  const [user, setUser] = useState<User | null>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -20,7 +20,19 @@ export default function SupportWidget() {
   const [ticketId, setTicketId] = useState<string | null>(null);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
-  const triggerMutation = useMutation(api.support.createTicket);
+
+  // Initialize with user session from Supabase
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   // Initialize with greeting
   useEffect(() => {
@@ -100,14 +112,22 @@ export default function SupportWidget() {
     ];
 
     try {
-      const res = await triggerMutation({
-        email: userEmail,
-        messages: ticketMessages,
-        status: "open",
-        createdAt: new Date().toISOString(),
-      });
+      const { data, error } = await supabase
+        .from("support_tickets")
+        .insert([
+          {
+            email: userEmail,
+            messages: ticketMessages,
+            status: "open",
+            created_at: new Date().toISOString(),
+          }
+        ])
+        .select();
 
-      setTicketId(res);
+      if (error) throw error;
+
+      const ticketIdVal = data?.[0]?.id || Math.floor(Math.random() * 100000).toString();
+      setTicketId(ticketIdVal.toString());
 
       setMessages((prev) => [
         ...prev,
@@ -118,13 +138,21 @@ export default function SupportWidget() {
         },
         {
           sender: "ai",
-          text: `تم تسجيل طلبك برقم التذكرة: ${res}. سيتواصل معك المطور الفني عبر البريد الإلكتروني قريباً.`,
+          text: `تم تسجيل طلبك برقم التذكرة: ${ticketIdVal}. سيتواصل معك المطور الفني عبر البريد الإلكتروني قريباً.`,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);
     } catch (error) {
       console.error("Failed to create support ticket", error);
       setIsHumanRequested(false);
+      setMessages((prev) => [
+        ...prev,
+        {
+          sender: "system",
+          text: "فشل إرسال الطلب. تأكد من إعداد جدول support_tickets في Supabase.",
+          timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        }
+      ]);
     } finally {
       setIsTyping(false);
     }

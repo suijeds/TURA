@@ -2,9 +2,8 @@
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
-import { useQuery } from 'convex/react';
-import { useAuthActions } from '@convex-dev/auth/react';
-import { api } from '../../../convex/_generated/api';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
@@ -201,9 +200,32 @@ export default function EnginePage() {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
   
-  const { signOut } = useAuthActions();
-  const currentUser = useQuery(api.users.viewer);
-  const session = currentUser ? { user: currentUser } : null;
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const session = currentUser ? {
+    user: {
+      name: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User',
+      email: currentUser.email,
+      image: currentUser.user_metadata?.avatar_url || null
+    }
+  } : null;
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = '/auth/signin';
+  };
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 

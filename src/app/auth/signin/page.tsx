@@ -1,8 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { useAuthActions } from '@convex-dev/auth/react';
-import { useConvexAuth } from 'convex/react';
+import { supabase } from '@/lib/supabase';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -10,27 +9,38 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
-  const { signIn } = useAuthActions();
-  const { isAuthenticated } = useConvexAuth();
-
   useEffect(() => {
-    if (isAuthenticated) {
-      window.location.href = '/engine';
-    }
-  }, [isAuthenticated]);
+    // If user is already logged in, redirect to /engine
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) {
+        window.location.href = '/engine';
+      }
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        window.location.href = '/engine';
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      // Mock login for email credentials for now
-      if (email === 'admin@tura.app' && password === 'admin123') {
-        window.location.href = '/engine';
+      const { data, error: err } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      if (err) {
+        setError(err.message || 'بيانات الدخول غير صحيحة. جرب admin@tura.app / admin123');
       } else {
-        setError('بيانات الدخول غير صحيحة. جرب admin@tura.app / admin123');
+        window.location.href = '/engine';
       }
-    } catch (err) {
+    } catch (err: any) {
       setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
     } finally {
       setLoading(false);
@@ -41,11 +51,16 @@ export default function SignInPage() {
     setLoading(true);
     setError('');
     try {
-      await signIn('google');
+      const { error: err } = await supabase.auth.signInWithOAuth({
+        provider: 'google',
+        options: {
+          redirectTo: window.location.origin + '/engine',
+        },
+      });
+      if (err) throw err;
     } catch (err: any) {
       console.error(err);
-      setError('فشلت تهيئة الدخول بجوجل. يرجى التأكد من تشغيل npx convex deploy وتفعيل مفاتيح Google OAuth.');
-    } finally {
+      setError('فشلت تهيئة الدخول بجوجل. يرجى التأكد من تهيئة متغيرات البيئة لـ Supabase.');
       setLoading(false);
     }
   };

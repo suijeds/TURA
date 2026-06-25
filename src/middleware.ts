@@ -1,16 +1,49 @@
-import { auth } from "@/auth";
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
-export default auth((req) => {
-  const isLoggedIn = !!req.auth;
-  const isEnginePage = req.nextUrl.pathname.startsWith("/engine");
-  const isDirectorPage = req.nextUrl.pathname.startsWith("/director");
+export async function middleware(request: NextRequest) {
+  let supabaseResponse = NextResponse.next({
+    request,
+  })
 
-  if ((isEnginePage || isDirectorPage) && !isLoggedIn) {
-    const signInUrl = new URL("/auth/signin", req.nextUrl.origin);
-    return Response.redirect(signInUrl);
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
+  const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
+
+  const supabase = createServerClient(
+    supabaseUrl,
+    supabaseAnonKey,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll()
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
+          supabaseResponse = NextResponse.next({
+            request,
+          })
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options)
+          )
+        },
+      },
+    }
+  )
+
+  const { data: { user } } = await supabase.auth.getUser()
+
+  const isEnginePage = request.nextUrl.pathname.startsWith("/engine");
+  const isDirectorPage = request.nextUrl.pathname.startsWith("/director");
+
+  if ((isEnginePage || isDirectorPage) && !user) {
+    const url = request.nextUrl.clone()
+    url.pathname = '/auth/signin'
+    return NextResponse.redirect(url)
   }
-});
+
+  return supabaseResponse
+}
 
 export const config = {
-  matcher: ["/engine/:path*", "/director/:path*"],
-};
+  matcher: ['/engine/:path*', '/director/:path*'],
+}
