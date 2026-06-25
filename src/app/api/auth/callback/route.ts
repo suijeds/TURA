@@ -1,5 +1,4 @@
 import { createServerClient } from '@supabase/ssr'
-import { cookies } from 'next/headers'
 import { NextResponse } from 'next/server'
 
 export const runtime = 'edge';
@@ -9,8 +8,16 @@ export async function GET(request: Request) {
   const code = searchParams.get('code')
   const next = searchParams.get('next') ?? '/engine'
 
+  // Determine redirect url first
+  const forwardedHost = request.headers.get('x-forwarded-host')
+  const redirectUrl = forwardedHost 
+    ? `https://${forwardedHost}${next}` 
+    : `${origin}${next}`;
+
+  // Create redirect response
+  let response = NextResponse.redirect(redirectUrl)
+
   if (code) {
-    const cookieStore = await cookies()
     const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || 'https://placeholder.supabase.co';
     const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || 'placeholder-anon-key';
 
@@ -20,16 +27,26 @@ export async function GET(request: Request) {
       {
         cookies: {
           getAll() {
-            return cookieStore.getAll()
+            // Parse cookies directly from request headers
+            const cookieHeader = request.headers.get('Cookie') || '';
+            const parsedCookies = cookieHeader.split(';').map(c => {
+              const [name, ...val] = c.trim().split('=');
+              return { name, value: val.join('=') };
+            }).filter(c => c.name !== '');
+            return parsedCookies;
           },
           setAll(cookiesToSet) {
-            try {
-              cookiesToSet.forEach(({ name, value, options }) =>
-                cookieStore.set(name, value, options)
-              )
-            } catch {
-              // Ignore if called from Server Component
-            }
+            cookiesToSet.forEach(({ name, value, options }) => {
+              // Write directly to the redirect response
+              response.cookies.set(name, value, {
+                ...options,
+                // Ensure cookies are secure and available on pages.dev domains
+                httpOnly: true,
+                secure: true,
+                sameSite: 'lax',
+                path: '/',
+              })
+            })
           },
         },
       }
@@ -37,12 +54,7 @@ export async function GET(request: Request) {
     
     const { error } = await supabase.auth.exchangeCodeForSession(code)
     if (!error) {
-      const forwardedHost = request.headers.get('x-forwarded-host')
-      if (forwardedHost) {
-        return NextResponse.redirect(`https://${forwardedHost}${next}`)
-      } else {
-        return NextResponse.redirect(`${origin}${next}`)
-      }
+      return response;
     }
   }
 
