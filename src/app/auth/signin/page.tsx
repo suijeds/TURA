@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
-import { signIn } from 'next-auth/react';
+import React, { useState, useEffect } from 'react';
+import { useAuthActions } from '@convex-dev/auth/react';
+import { useConvexAuth } from 'convex/react';
 
 export default function SignInPage() {
   const [email, setEmail] = useState('');
@@ -9,20 +10,25 @@ export default function SignInPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
 
+  const { signIn } = useAuthActions();
+  const { isAuthenticated } = useConvexAuth();
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      window.location.href = '/engine';
+    }
+  }, [isAuthenticated]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setError('');
     try {
-      const res = await signIn('credentials', {
-        email,
-        password,
-        redirect: false, // Set to false to handle error customly
-      }) as any;
-      if (res?.error) {
-        setError('بيانات الدخول غير صحيحة. جرب admin@tura.app / admin123');
-      } else {
+      // Mock login for email credentials for now
+      if (email === 'admin@tura.app' && password === 'admin123') {
         window.location.href = '/engine';
+      } else {
+        setError('بيانات الدخول غير صحيحة. جرب admin@tura.app / admin123');
       }
     } catch (err) {
       setError('حدث خطأ غير متوقع. يرجى المحاولة مرة أخرى.');
@@ -44,7 +50,7 @@ export default function SignInPage() {
         </div>
 
         <button 
-          onClick={() => signIn('google', { callbackUrl: '/engine' })}
+          onClick={() => signIn('google')}
           className="btn-google"
         >
           <svg className="google-icon" viewBox="0 0 24 24" width="20" height="20">
