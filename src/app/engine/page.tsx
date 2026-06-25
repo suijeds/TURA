@@ -2,7 +2,9 @@
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
-import { useSession, signOut } from 'next-auth/react';
+import { useQuery } from 'convex/react';
+import { useAuthActions } from '@convex-dev/auth/react';
+import { api } from '../../../convex/_generated/api';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
@@ -199,7 +201,9 @@ export default function EnginePage() {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
   
-  const { data: session } = useSession();
+  const { signOut } = useAuthActions();
+  const currentUser = useQuery(api.users.viewer);
+  const session = currentUser ? { user: currentUser } : null;
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 

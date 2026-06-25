@@ -11,6 +11,8 @@
   "dependencies": {
     "@ai-sdk/google": "^3.0.79",
     "@ai-sdk/react": "^3.0.193",
+    "@auth/core": "^0.41.2",
+    "@convex-dev/auth": "^0.0.94",
     "ai": "^6.0.191",
     "convex": "^1.41.0",
     "lucide-react": "^1.21.0",

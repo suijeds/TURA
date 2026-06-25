@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useSession } from "next-auth/react";
-import { useMutation } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import { api } from "../../convex/_generated/api";
 
 interface Message {
@@ -12,7 +11,7 @@ interface Message {
 }
 
 export default function SupportWidget() {
-  const { data: session } = useSession();
+  const user = useQuery(api.users.viewer);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -87,7 +86,7 @@ export default function SupportWidget() {
   const handleRequestHuman = async () => {
     if (isHumanRequested) return;
 
-    const userEmail = session?.user?.email || "anonymous@tura.app";
+    const userEmail = user?.email || "anonymous@tura.app";
     setIsHumanRequested(true);
     setIsTyping(true);
 
