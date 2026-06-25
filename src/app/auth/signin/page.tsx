@@ -54,7 +54,7 @@ export default function SignInPage() {
       const { error: err } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin + '/engine',
+          redirectTo: window.location.origin + '/api/auth/callback',
         },
       });
       if (err) throw err;
