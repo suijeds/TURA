@@ -13,6 +13,7 @@
     "@ai-sdk/react": "^3.0.193",
     "@auth/core": "^0.41.2",
     "@clerk/nextjs": "^7.5.9",
+    "@neondatabase/serverless": "^1.1.0",
     "ai": "^6.0.191",
     "lucide-react": "^1.21.0",
     "next": "16.2.6",

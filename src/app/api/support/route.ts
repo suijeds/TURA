@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { sql } from '@/lib/db';
 
 export const runtime = 'edge';
 
@@ -6,6 +7,13 @@ export async function POST(request: Request) {
   try {
     const { email, messages, status, createdAt } = await request.json();
 
+    // 1. Save ticket in Neon DB
+    await sql`
+      INSERT INTO support_tickets (user_email, messages, status)
+      VALUES (${email}, ${JSON.stringify(messages)}, ${status || 'open'});
+    `;
+
+    // 2. Dispatch alert to Developer Webhook
     const webhookUrl = process.env.SUPPORT_WEBHOOK_URL;
     if (webhookUrl) {
       const formattedMessages = messages
