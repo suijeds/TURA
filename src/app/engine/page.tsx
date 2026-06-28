@@ -2,8 +2,7 @@
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '@/lib/supabase';
-import { User } from '@supabase/supabase-js';
+import { useUser, useClerk } from '@clerk/nextjs';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
@@ -200,32 +199,16 @@ export default function EnginePage() {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
   
-  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const { user } = useUser();
+  const { signOut } = useClerk();
 
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setCurrentUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setCurrentUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const session = currentUser ? {
+  const session = user ? {
     user: {
-      name: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User',
-      email: currentUser.email,
-      image: currentUser.user_metadata?.avatar_url || null
+      name: user.fullName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User',
+      email: user.primaryEmailAddress?.emailAddress || '',
+      image: user.imageUrl || null
     }
   } : null;
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-    window.location.href = '/auth/signin';
-  };
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 

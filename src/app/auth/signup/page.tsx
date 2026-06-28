@@ -1,18 +1,18 @@
 "use client";
 
 import React from "react";
-import { SignIn } from "@clerk/nextjs";
+import { SignUp } from "@clerk/nextjs";
 
-export default function SignInPage() {
+export default function SignUpPage() {
   return (
     <div className="signin-container">
       <div className="glow-bg glow-one"></div>
       <div className="glow-bg glow-two"></div>
       
       <div className="signin-card-clerk">
-        <SignIn
+        <SignUp
           routing="hash"
-          signUpUrl="/auth/signup"
+          signInUrl="/auth/signin"
           appearance={{
             elements: {
               rootBox: "clerk-root",

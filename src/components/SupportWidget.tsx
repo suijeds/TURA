@@ -1,8 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { supabase } from "@/lib/supabase";
-import { User } from "@supabase/supabase-js";
+import { useUser } from "@clerk/nextjs";
 
 interface Message {
   sender: "user" | "ai" | "system";
@@ -11,7 +10,7 @@ interface Message {
 }
 
 export default function SupportWidget() {
-  const [user, setUser] = useState<User | null>(null);
+  const { user } = useUser();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
@@ -20,19 +19,6 @@ export default function SupportWidget() {
   const [ticketId, setTicketId] = useState<string | null>(null);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
-
-  // Initialize with user session from Supabase
-  useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-    });
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
 
   // Initialize with greeting
   useEffect(() => {
@@ -98,7 +84,7 @@ export default function SupportWidget() {
   const handleRequestHuman = async () => {
     if (isHumanRequested) return;
 
-    const userEmail = user?.email || "anonymous@tura.app";
+    const userEmail = user?.primaryEmailAddress?.emailAddress || "anonymous@tura.app";
     setIsHumanRequested(true);
     setIsTyping(true);
 
@@ -112,22 +98,22 @@ export default function SupportWidget() {
     ];
 
     try {
-      const { data, error } = await supabase
-        .from("support_tickets")
-        .insert([
-          {
-            email: userEmail,
-            messages: ticketMessages,
-            status: "open",
-            created_at: new Date().toISOString(),
-          }
-        ])
-        .select();
+      const res = await fetch("/api/support", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email: userEmail,
+          messages: ticketMessages,
+          status: "open",
+          createdAt: new Date().toISOString(),
+        }),
+      });
 
-      if (error) throw error;
+      const data = await res.json();
+      if (!data.success) throw new Error(data.error);
 
-      const ticketIdVal = data?.[0]?.id || Math.floor(Math.random() * 100000).toString();
-      setTicketId(ticketIdVal.toString());
+      const ticketIdVal = data.ticketId;
+      setTicketId(ticketIdVal);
 
       setMessages((prev) => [
         ...prev,
@@ -149,7 +135,7 @@ export default function SupportWidget() {
         ...prev,
         {
           sender: "system",
-          text: "فشل إرسال الطلب. تأكد من إعداد جدول support_tickets في Supabase.",
+          text: "فشل إرسال الطلب. يرجى المحاولة مرة أخرى لاحقاً.",
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         }
       ]);

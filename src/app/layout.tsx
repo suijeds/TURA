@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import SupportWidget from "@/components/SupportWidget";
+import { ClerkProvider } from "@clerk/nextjs";
 
 export const metadata: Metadata = {
   title: "TURA — Cinematic Prompt Engine",
@@ -19,11 +20,13 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="ar">
-      <body>
-        {children}
-        <SupportWidget />
-      </body>
-    </html>
+    <ClerkProvider>
+      <html lang="ar">
+        <body>
+          {children}
+          <SupportWidget />
+        </body>
+      </html>
+    </ClerkProvider>
   );
 }
