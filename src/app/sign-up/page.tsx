@@ -12,7 +12,7 @@ export default function SignUpPage() {
       <div className="signin-card-clerk">
         <SignUp
           routing="hash"
-          signInUrl="/auth/signin"
+          signInUrl="/sign-in"
           appearance={{
             elements: {
               rootBox: "clerk-root",
