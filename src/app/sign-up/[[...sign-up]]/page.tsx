@@ -3,6 +3,8 @@
 import React from "react";
 import { SignUp } from "@clerk/nextjs";
 
+export const runtime = 'edge';
+
 export default function SignUpPage() {
   return (
     <div className="signin-container">
