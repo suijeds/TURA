@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState, useEffect, useRef } from "react";
-import { useUser } from "@clerk/nextjs";
+import { supabase } from "@/lib/supabase";
 
 interface Message {
   sender: "user" | "ai" | "system";
@@ -10,13 +10,25 @@ interface Message {
 }
 
 export default function SupportWidget() {
-  const { user } = useUser();
+  const [currentUser, setCurrentUser] = useState<any>(null);
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState<Message[]>([]);
   const [inputText, setInputText] = useState("");
   const [isTyping, setIsTyping] = useState(false);
   const [isHumanRequested, setIsHumanRequested] = useState(false);
   const [ticketId, setTicketId] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setCurrentUser(session?.user ?? null);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
   
   const chatEndRef = useRef<HTMLDivElement>(null);
 
@@ -84,7 +96,7 @@ export default function SupportWidget() {
   const handleRequestHuman = async () => {
     if (isHumanRequested) return;
 
-    const userEmail = user?.primaryEmailAddress?.emailAddress || "anonymous@tura.app";
+    const userEmail = currentUser?.email || "anonymous@tura.app";
     setIsHumanRequested(true);
     setIsTyping(true);
 

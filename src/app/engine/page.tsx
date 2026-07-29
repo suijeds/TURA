@@ -2,7 +2,8 @@
 export const runtime = 'edge';
 import { usePromptEngine } from '@/hooks/usePromptEngine';
 import React, { useState, useEffect, useRef } from 'react';
-import { useUser, useClerk } from '@clerk/nextjs';
+import { supabase } from '@/lib/supabase';
+import { User } from '@supabase/supabase-js';
 import { COLOR_DATABASE } from '@/data/colorDatabase';
 import { CONFLICTS } from '@/data/sections';
 import Link from 'next/link';
@@ -199,16 +200,57 @@ export default function EnginePage() {
   const [isDarkTheme, setIsDarkTheme] = useState(true);
   const settingsRef = useRef<HTMLDivElement>(null);
   
-  const { user } = useUser();
-  const { signOut } = useClerk();
+  const [currentUser, setCurrentUser] = useState<User | null>(null);
+  const [authLoading, setAuthLoading] = useState(true);
 
-  const session = user ? {
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (!session) {
+        window.location.href = "/login";
+      } else {
+        setCurrentUser(session.user);
+      }
+      setAuthLoading(false);
+    });
+
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (!session) {
+        window.location.href = "/login";
+      } else {
+        setCurrentUser(session.user);
+      }
+      setAuthLoading(false);
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  const session = currentUser ? {
     user: {
-      name: user.fullName || user.username || user.primaryEmailAddress?.emailAddress?.split('@')[0] || 'User',
-      email: user.primaryEmailAddress?.emailAddress || '',
-      image: user.imageUrl || null
+      name: currentUser.user_metadata?.full_name || currentUser.email?.split('@')[0] || 'User',
+      email: currentUser.email || '',
+      image: currentUser.user_metadata?.avatar_url || null
     }
   } : null;
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+    window.location.href = "/login";
+  };
+
+  if (authLoading || !currentUser) {
+    return (
+      <div style={{ display: 'flex', height: '100vh', background: '#06080c', alignItems: 'center', justifyContent: 'center', color: '#fff', fontFamily: 'sans-serif' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ border: '3px solid rgba(212,160,32,0.1)', borderTop: '3px solid #d4a020', borderRadius: '50%', width: '40px', height: '40px', animation: 'spin 1s linear infinite', margin: '0 auto 16px' }} />
+          <p style={{ fontSize: '0.9rem', color: '#94a3b8' }}>جاري التحقق من الهوية...</p>
+          <style dangerouslySetInnerHTML={{ __html: `
+            @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: scale(1) rotate(360deg); } }
+          ` }} />
+        </div>
+      </div>
+    );
+  }
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
@@ -975,6 +1017,20 @@ export default function EnginePage() {
 
         {/* Separator to push the settings hamburger button to the far left side */}
         <div className="topbar-sep" />
+
+        {/* Sign Out Button in Header */}
+        {session?.user && (
+          <button 
+            className="tb-btn" 
+            onClick={() => signOut()}
+            style={{ color: 'var(--red2, #ef4444)', padding: '6px 12px', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '8px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: '6px', marginLeft: '8px' }}
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+              <path d="M9 21H5a2 2 0 01-2-2V5a2 2 0 012-2h4M16 17l5-5-5-5M21 12H9"/>
+            </svg>
+            <span className="desktop-only" style={{ fontSize: '0.8rem', fontWeight: 'bold' }}>{l === 'ar' ? 'تسجيل الخروج' : 'Sign Out'}</span>
+          </button>
+        )}
 
         {/* User profile and dropdown */}
         {session?.user && (
